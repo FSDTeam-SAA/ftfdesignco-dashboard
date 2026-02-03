@@ -19,7 +19,7 @@ export async function middleware(req: NextRequest) {
 
     // Role check
     if (token.role !== "owner") {
-      return NextResponse.redirect(new URL("/unauthorized", req.url));
+      return NextResponse.redirect(new URL("/login", req.url));
     }
   }     
 
