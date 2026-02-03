@@ -14,7 +14,7 @@ const Login = () => {
   const searchParams = useSearchParams();
 
   // Get callback URL from search params (for redirecting after login)
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

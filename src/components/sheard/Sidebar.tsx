@@ -20,6 +20,19 @@ import { cn } from "@/lib/utils";
 import { useSidebarStore } from "@/lib/store/sidebar-store";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useLogout } from "@/features/auth/hooks/uselogout";
+import { Loader2 } from "lucide-react";
 
 const navItems = [
   {
@@ -61,6 +74,9 @@ export default function Sidebar() {
     }
   }, [pathname, isMobileOpen, setMobileOpen]);
 
+  // Logout function
+  const { loading: isLoggingOut, handleLogout } = useLogout();
+
   const SidebarContent = (
     <div className="flex flex-col  h-full bg-sidebar border-r border-sidebar-border">
       {/* Logo Section */}
@@ -72,7 +88,6 @@ export default function Sidebar() {
           </div>
         )}
 
-  
         <Button
           variant="ghost"
           size="icon"
@@ -128,16 +143,52 @@ export default function Sidebar() {
 
       {/* Bottom section (Logout) */}
       <div className="p-4 border-t border-sidebar-border mt-auto text-center">
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start gap-3 hover:text-destructive hover:bg-destructive/10 text-red-500",
-            isCollapsed && "justify-center px-2",
-          )}
-        >
-          <LogOut size={20} />
-          {!isCollapsed && <span>Logout</span>}
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-3 hover:text-destructive hover:bg-destructive/10 text-red-500",
+                isCollapsed && "justify-center px-2",
+              )}
+              disabled={isLoggingOut}
+            >
+              <LogOut size={20} />
+              {!isCollapsed && <span>Logout</span>}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will end your current session and you will need to log in
+                again to access your dashboard.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isLoggingOut}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleLogout();
+                }}
+                disabled={isLoggingOut}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isLoggingOut ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging out...
+                  </>
+                ) : (
+                  "Logout"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
@@ -153,8 +204,6 @@ export default function Sidebar() {
       >
         {SidebarContent}
       </aside>
-
- 
     </>
   );
 }
