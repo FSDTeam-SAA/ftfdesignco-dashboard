@@ -95,7 +95,7 @@ export default function Sidebar() {
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
                 isActive
                   ? "bg-sidebar-accent font-medium text-primary"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground font-medium",
                 isCollapsed && "justify-center px-2 text-primary",
               )}
             >
@@ -112,7 +112,7 @@ export default function Sidebar() {
 
               {/* Active indicator */}
               {isActive && !isCollapsed && (
-                <div className="absolute left-0 w-1 h-6 bg-sidebar-primary rounded-r-full text-primary" />
+                <div className="absolute left-0 w-1 h-6 bg-sidebar-primary rounded-r-full text-primary font-bold" />
               )}
 
               {/* Tooltip for collapsed state */}
