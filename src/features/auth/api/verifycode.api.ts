@@ -1,12 +1,24 @@
+import { api } from '@/lib/api';
 // features/auth/api/verifycode.api.ts
-import { api } from "@/lib/api";
-import { VerifyCodeFormData } from "../types";
+ 
+// Verify OTP
+export const verifyOtp = async (
+  payload: { otp: string },
+  tokenFromURL: string,
+) => {
+  // console.log(tokenFromURL);
+  try {
+    const response = await api.post("/auth/verify-otp", payload, {
+      headers: {
+        Authorization: `Bearer ${tokenFromURL}`,
+      },
+    });
 
-export const verifyCode = async (formData: VerifyCodeFormData) => {
-    try {
-        const response = await api.post("/auth/verify-code", formData);
-        return response.data;
-    } catch (error) {
-        throw error;
-    }
-}
+    return { success: true, data: response.data };
+  } catch {
+    return {
+      success: false,
+      message: "Verification failed",
+    };
+  }
+};

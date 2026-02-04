@@ -1,35 +1,35 @@
-// auth types 
+// auth types
 export interface User {
-    _id: string;
-    email: string;
-    role: string;
-    profileImage: string;
-    refreshToken: string;
-    updatedAt: string;
+  _id: string;
+  email: string;
+  role: string;
+  profileImage: string;
+  refreshToken: string;
+  updatedAt: string;
 }
 
 export interface LoginData {
-    user: User;
-    accessToken: string;
+  user: User;
+  accessToken: string;
 }
 
 export interface LoginResponse {
-    status: boolean;
-    message: string;
-    data: LoginData;
+  status: boolean;
+  message: string;
+  data: LoginData;
 }
 
 export interface ForgotPasswordFormData {
-    email: string;
+  email: string;
 }
 
 export interface VerifyCodeFormData {
-    email: string;
-    otp: string;
+  otp: string;
+  token?: string;
 }
 
 export interface RegisterFormData {
-    name: string;
-    email: string;
-    password: string;
+  name: string;
+  email: string;
+  password: string;
 }

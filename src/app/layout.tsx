@@ -12,9 +12,9 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "sktch Labs",
+  title: "FTF Design Co. Dashboard",
   description:
-    "Design amazing digital experiences that create more happy in the world.",
+    "Dashboard for FTF Design Co.",
 };
 
 export default function RootLayout({

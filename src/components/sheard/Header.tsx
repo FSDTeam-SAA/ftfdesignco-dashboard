@@ -2,7 +2,7 @@
 
 import React from "react";
 import { usePathname } from "next/navigation";
-import { Menu, Search, Bell } from "lucide-react";
+import { Menu, Search, Bell, Loader2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,6 +23,7 @@ import {
 import { useSidebarStore } from "@/lib/store/sidebar-store";
 import Sidebar from "./Sidebar";
 import Image from "next/image";
+import { useLogout } from "@/features/auth/hooks/uselogout";
 
 export default function Header() {
   const pathname = usePathname();
@@ -61,6 +62,8 @@ export default function Header() {
         return "";
     }
   };
+
+    const { loading: isLoggingOut, handleLogout } = useLogout();
 
   return (
     <header className="h-20 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-40 w-full px-4 md:px-6">
@@ -151,8 +154,22 @@ export default function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
-                Log out
+              <DropdownMenuItem
+                className="cursor-pointer text-destructive focus:text-destructive"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                {isLoggingOut ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging out...
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </>
+                )}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -1,28 +1,55 @@
-// features/auth/hooks/useverifycode.ts
 "use client";
 import { useState } from "react";
-
-import { verifyCode as verifyCodeApi } from "../api/verifycode.api";
+import { useSearchParams } from "next/navigation";
+import { verifyOtp as verifyCodeApi } from "../api/verifycode.api";
+import { forgotPassword as forgotPasswordApi } from "../api/forgotpassword.api";
 
 export function useVerifyCode() {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
 
-    const verifyCode = async (code: string, email: string) => {
-        setLoading(true);
-        setError(null);
-        setSuccess(null);
-        try {
-            const response = await verifyCodeApi({ email, otp: code });
-            setSuccess(response.message);
-        } catch (error) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            setError(err.response?.data?.message || err.message || "Something went wrong");
-        } finally {
-            setLoading(false);
-        }
+  const handleVerifyOtp = async (otp: string) => {
+    setLoading(true);
+    const token = searchParams.get("token") || "";
+    // console.log(token)
+    try {
+      const res = await verifyCodeApi({ otp }, token);
+      setLoading(false);
+      return res;
+    } catch (error: any) {
+      setLoading(false);
+      return {
+        success: false,
+        message:
+          error?.response?.data?.message ||
+          error?.message ||
+          "Something went wrong",
+      };
     }
+  };
 
-    return { verifyCode, loading, error, success };
+  const handleResendOtp = async () => {
+    setLoading(true);
+    const email = searchParams.get("email") || "";
+    if (!email) {
+      setLoading(false);
+      return { success: false, message: "Email not found" };
+    }
+    try {
+      await forgotPasswordApi({ email });
+      setLoading(false);
+      return { success: true, message: "OTP resent successfully" };
+    } catch (error: any) {
+      setLoading(false);
+      return {
+        success: false,
+        message:
+          error?.response?.data?.message ||
+          error?.message ||
+          "Something went wrong",
+      };
+    }
+  };
+
+  return { handleVerifyOtp, handleResendOtp, loading };
 }

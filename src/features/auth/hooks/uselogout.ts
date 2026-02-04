@@ -9,7 +9,7 @@ export function useLogout() {
     setLoading(true);
     try {
       await signOut({
-        callbackUrl: "/",
+        callbackUrl: "/login",
         redirect: true,
       });
     } catch (error) {

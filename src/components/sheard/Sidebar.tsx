@@ -5,9 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Megaphone,
-  Wand2,
-  Settings,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -175,7 +172,7 @@ export default function Sidebar() {
                   handleLogout();
                 }}
                 disabled={isLoggingOut}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className="bg-red-600 text-white hover:bg-red-500"
               >
                 {isLoggingOut ? (
                   <>
