@@ -4,6 +4,7 @@ import { isAxiosError } from "axios";
 import { useDeleteProduct, useProducts } from "../hooks/useProducts";
 import { Product } from "../types";
 import Pagination from "./Pagination";
+import AddProductModal from "./AddProductModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, Eye, PencilLine, Trash2 } from "lucide-react";
@@ -42,6 +43,7 @@ export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const handleViewProduct = (product: Product) => {
     setSelectedProduct(product);
@@ -200,7 +202,10 @@ export default function Products() {
             Manage your product inventory and details
           </p>
         </div>
-        <Button className="bg-[#D1FAE5] hover:bg-[#A7F3D0] text-[#065F46] font-semibold flex items-center gap-2 border-none shadow-sm w-full sm:w-auto">
+        <Button
+          onClick={() => setIsAddModalOpen(true)}
+          className="bg-[#D1FAE5] hover:bg-[#A7F3D0] text-[#065F46] font-semibold flex items-center gap-2 border-none shadow-sm w-full sm:w-auto"
+        >
           <Plus size={18} />
           Add Product
         </Button>
@@ -247,6 +252,12 @@ export default function Products() {
         product={selectedProduct}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
+      />
+
+      {/* Add Modal */}
+      <AddProductModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
       />
     </div>
   );
