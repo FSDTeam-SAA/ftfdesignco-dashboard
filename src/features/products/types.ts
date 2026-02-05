@@ -34,6 +34,19 @@ export interface UpdateProductData {
   images?: string[];
 }
 
+export interface CreateProductData {
+  title: string;
+  description: string;
+  type: string;
+  size: string;
+  price: number;
+  availableQuantity: number;
+  status: "active" | "inactive";
+  sku?: string;
+  image?: string;
+  images?: string[];
+}
+
 export interface PaginationMetadata {
   total: number;
   page: number;
