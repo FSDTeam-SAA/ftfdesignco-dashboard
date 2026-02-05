@@ -1,13 +1,15 @@
 "use client";
 
 import { useAnalytics } from "../hooks/useAnalytics";
-import { Users, Package, ShoppingCart, Building2 } from "lucide-react";
+import { Users, Package, ShoppingCart, Landmark } from "lucide-react";
+import RecentOrders from "./RecentOrders";
 
 export default function Dashboard() {
   const { data, isLoading, error } = useAnalytics();
 
   if (isLoading) return <div className="p-6">Loading...</div>;
-  if (error) return <div className="p-6 text-red-500">Error: {error.message}</div>;
+  if (error)
+    return <div className="p-6 text-red-500">Error: {error.message}</div>;
 
   const analytics = data?.data;
 
@@ -22,7 +24,7 @@ export default function Dashboard() {
     {
       title: "Branches",
       value: 8,
-      icon: <Building2 size={36} />,
+      icon: <Landmark size={36} />,
       color: "text-orange-600",
       bg: "bg-orange-50",
     },
@@ -44,7 +46,7 @@ export default function Dashboard() {
 
   return (
     <div className="p-6">
-      <div className="border rounded-xl p-5 bg-white">
+      <div className="border rounded-xl p-5 bg-white mb-8">
         <h2 className="text-lg font-semibold mb-4">
           Enquiries by Product Type
         </h2>
@@ -56,7 +58,9 @@ export default function Dashboard() {
               className={`${card.bg} p-4 rounded-lg flex justify-between items-center`}
             >
               <div>
-                <p className="text-md font-semibold text-gray-600">{card.title}</p>
+                <p className="text-md font-semibold text-gray-600">
+                  {card.title}
+                </p>
                 <p className={`text-4xl font-bold mt-1 ${card.color}`}>
                   {card.value}
                 </p>
@@ -67,6 +71,8 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
+
+      <RecentOrders />
     </div>
   );
 }
