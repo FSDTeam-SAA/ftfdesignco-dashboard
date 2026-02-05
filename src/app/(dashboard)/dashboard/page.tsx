@@ -1,10 +1,11 @@
- 
+import Dashboard from "@/features/dashboard/component/Dashboard";
+
 const page = () => {
   return (
-    <>
- this ia page
-    </>
-  )
-}
+    <div>
+      <Dashboard />
+    </div>
+  );
+};
 
-export default page
+export default page;
