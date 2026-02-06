@@ -12,6 +12,7 @@ import {
   ShoppingCart,
   CreditCard,
   BadgeInfo,
+  ShoppingBasket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSidebarStore } from "@/lib/store/sidebar-store";
@@ -48,15 +49,20 @@ const navItems = [
     icon: Users,
   },
   {
-    title: "Shipping Info",
-    href: "/dashboard/shipping-info",
-    icon: BadgeInfo,
+    title: "Category",
+    href: "/dashboard/category",
+    icon: ShoppingBasket,
   },
-  {
-    title: "Inventory Page",
-    href: "/dashboard/inventory-page",
-    icon: CreditCard,
-  },
+  // {
+  //   title: "Shipping Info",
+  //   href: "/dashboard/shipping-info",
+  //   icon: BadgeInfo,
+  // },
+  // {
+  //   title: "Inventory Page",
+  //   href: "/dashboard/inventory-page",
+  //   icon: CreditCard,
+  // },
 ];
 
 export default function Sidebar() {

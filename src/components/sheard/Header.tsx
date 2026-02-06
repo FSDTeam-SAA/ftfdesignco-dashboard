@@ -2,7 +2,8 @@
 
 import React from "react";
 import { usePathname } from "next/navigation";
-import { Menu, Search, Bell, Loader2, LogOut } from "lucide-react";
+import { Menu, Loader2, LogOut } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,6 +27,8 @@ import Image from "next/image";
 import { useLogout } from "@/features/auth/hooks/uselogout";
 
 export default function Header() {
+  const { data: session } = useSession();
+  const user = session?.user;
   const pathname = usePathname();
   const { setMobileOpen, isMobileOpen } = useSidebarStore();
 
@@ -41,6 +44,8 @@ export default function Header() {
         return "Shipping & Logistics";
       case "/dashboard/inventory-page":
         return "Inventory Tracking";
+      case "/dashboard/category":
+        return "Category Management";
       default:
         return "Dashboard";
     }
@@ -58,12 +63,28 @@ export default function Header() {
         return "Track shipments and manage logistics.";
       case "/dashboard/inventory-page":
         return "Monitor stock levels and warehouse data.";
+      case "/dashboard/category":
+        return "Manage your product categories.";
       default:
         return "";
     }
   };
 
-    const { loading: isLoggingOut, handleLogout } = useLogout();
+  const { loading: isLoggingOut, handleLogout } = useLogout();
+
+  const getInitials = (name?: string, email?: string) => {
+    if (name) {
+      const parts = name.split(" ");
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+      }
+      return name.slice(0, 2).toUpperCase();
+    }
+    if (email) {
+      return email.slice(0, 2).toUpperCase();
+    }
+    return "??";
+  };
 
   return (
     <header className="h-20 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-40 w-full px-4 md:px-6">
@@ -132,12 +153,11 @@ export default function Header() {
                 className="relative h-10 w-10 rounded-full p-0"
               >
                 <Avatar className="h-10 w-10 border border-border">
-                  <AvatarImage
-                    src="/images/4f8da1b70693c4fcf9e01b9293706aed5cd4e34d.jpg"
-                    alt="User"
-                  />
+                  {user?.image ? (
+                    <AvatarImage src={user.image} alt={user.name || "User"} />
+                  ) : null}
                   <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
-                    RH
+                    {getInitials(user?.name, user?.email)}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -146,10 +166,10 @@ export default function Header() {
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none text-foreground">
-                    Rashedul Haque
+                    {user?.name || "Guest User"}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    rashedul@sktchlabs.ai
+                    {user?.email || "No email available"}
                   </p>
                 </div>
               </DropdownMenuLabel>
