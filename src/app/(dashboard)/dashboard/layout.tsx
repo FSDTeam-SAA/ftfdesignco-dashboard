@@ -4,9 +4,9 @@ import Header from "@/components/sheard/Header";
 import { SidebarLayoutWrapper } from "./SidebarLayoutWrapper";
 
 export const metadata: Metadata = {
-  title: "Dashboard Template.",
+  title: "FTF Design Co. Dashboard",
   description:
-    "A modern dashboard template built with Next.js and Tailwind CSS.",
+    "Dashboard for FTF Design Co.",
 };
 
 export default function RootLayout({

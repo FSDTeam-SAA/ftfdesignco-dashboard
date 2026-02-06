@@ -5,9 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Megaphone,
-  Wand2,
-  Settings,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -15,6 +12,7 @@ import {
   ShoppingCart,
   CreditCard,
   BadgeInfo,
+  ShoppingBasket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSidebarStore } from "@/lib/store/sidebar-store";
@@ -51,15 +49,20 @@ const navItems = [
     icon: Users,
   },
   {
-    title: "Shipping Info",
-    href: "/dashboard/shipping-info",
-    icon: BadgeInfo,
+    title: "Category",
+    href: "/dashboard/category",
+    icon: ShoppingBasket,
   },
-  {
-    title: "Inventory Page",
-    href: "/dashboard/inventory-page",
-    icon: CreditCard,
-  },
+  // {
+  //   title: "Shipping Info",
+  //   href: "/dashboard/shipping-info",
+  //   icon: BadgeInfo,
+  // },
+  // {
+  //   title: "Inventory Page",
+  //   href: "/dashboard/inventory-page",
+  //   icon: CreditCard,
+  // },
 ];
 
 export default function Sidebar() {
@@ -175,7 +178,7 @@ export default function Sidebar() {
                   handleLogout();
                 }}
                 disabled={isLoggingOut}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className="bg-red-600 text-white hover:bg-red-500"
               >
                 {isLoggingOut ? (
                   <>

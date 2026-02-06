@@ -1,30 +1,46 @@
-// features/auth/component/login.tsx
 "use client";
-import Image from "next/image";
+
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import React, { useState } from "react";
-import { useLogin } from "../hooks/uselogin";
+import { signIn } from "next-auth/react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const Login = () => {
-  const { loading, error, handleLogin } = useLogin();
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // Get callback URL from search params (for redirecting after login)
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-
-  const onSubmit = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await handleLogin(email, password);
-    if (res && !res.error) {
-      // Redirect to callback URL (e.g., /create-book) or home
-      router.push(callbackUrl);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.ok) {
+        toast.success("Logged in successfully!");
+        router.push("/dashboard");
+      } else {
+        const errorMsg = result?.error || "Login failed. Please try again.";
+        toast.error(errorMsg);
+        setError(errorMsg);
+      }
+    } catch (err) {
+      toast.error("Something went wrong. Please try again.");
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="max-w-6xl bg-white rounded-xl shadow-lg p-10">
@@ -47,7 +63,7 @@ const Login = () => {
         </p>
 
         {/* Form */}
-        <form className="space-y-4" onSubmit={onSubmit}>
+        <form className="space-y-4" onSubmit={handleSignIn}>
           {error && (
             <div className="bg-[#feecee] text-[#e5102e] p-3 rounded-md text-sm text-center">
               {error}
@@ -102,9 +118,9 @@ const Login = () => {
           <button
             type="submit"
             className="w-full mt-6 bg-[#000000] cursor-pointer hover:bg-primary/90 text-white font-semibold py-3 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={loading}
+            disabled={isLoading}
           >
-            {loading ? "Logging in..." : "Log In"}
+            {isLoading ? "Logging in..." : "Log In"}
           </button>
         </form>
       </div>
