@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CSVImportResponse } from "../types";
-import { AlertCircle, CheckCircle2, ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronRight } from "lucide-react";
 
 interface CSVImportSummaryModalProps {
   isOpen: boolean;
@@ -24,7 +24,7 @@ const CSVImportSummaryModal: React.FC<CSVImportSummaryModalProps> = ({
   if (!data) return null;
 
   const summary = data.data;
- 
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[650px] border-none shadow-2xl rounded-4xl p-0 bg-white overflow-hidden flex flex-col max-h-[90vh]">
@@ -68,6 +68,13 @@ const CSVImportSummaryModal: React.FC<CSVImportSummaryModalProps> = ({
                 {summary?.failed ?? 0}
               </p>
             </div>
+          </div>
+
+          <div className="bg-gray-50 p-5 rounded-3xl border border-gray-100">
+            <p className="text-gray-500 font-medium">
+              If a password is not provided while creating or fetching a user,
+              the system will automatically assign a default password: 123456
+            </p>
           </div>
         </div>
 

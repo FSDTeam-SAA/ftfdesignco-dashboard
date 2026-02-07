@@ -8,10 +8,14 @@ import {
 import { UpdateProductData, CreateProductData } from "../types";
 
 // Get All products
-export const useProducts = (page: number = 1, limit: number = 10) => {
+export const useProducts = (
+  page: number = 1,
+  limit: number = 10,
+  search: string = "",
+) => {
   return useQuery({
-    queryKey: ["products", page, limit],
-    queryFn: () => getProducts(page, limit),
+    queryKey: ["products", page, limit, search],
+    queryFn: () => getProducts(page, limit, search),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
   });

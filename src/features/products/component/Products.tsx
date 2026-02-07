@@ -3,22 +3,29 @@ import { useState } from "react";
 import { isAxiosError } from "axios";
 import { useDeleteProduct, useProducts } from "../hooks/useProducts";
 import { Product } from "../types";
-import Pagination from "./Pagination";
+import Pagination from "@/components/shared/Pagination";
 import AddProductModal from "./AddProductModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, PencilLine, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { downloadFile } from "@/lib/utils";
+import { downloadProductsCSV, downloadProductsPDF } from "../api/products";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductDetailsModal from "./ProductDetailsModal";
 import EditProductModal from "./EditProductModal";
 import Image from "next/image";
-import { toast } from "sonner";
+import { Plus, Eye, PencilLine, Trash2, FileDown } from "lucide-react";
 
 export default function Products() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [search, setSearch] = useState("");
 
-  const { data, isLoading, error } = useProducts(currentPage, itemsPerPage);
+  const { data, isLoading, error } = useProducts(
+    currentPage,
+    itemsPerPage,
+    search,
+  );
   const rawProducts: Product[] = data?.data || [];
 
   // If the API doesn't provide pagination metadata, we assume it returned all products
@@ -53,6 +60,28 @@ export default function Products() {
   const handleEditProduct = (product: Product) => {
     setSelectedProduct(product);
     setIsEditModalOpen(true);
+  };
+
+  const handleDownloadCSV = async () => {
+    try {
+      const blob = await downloadProductsCSV(search);
+      downloadFile(blob, "products_list.csv");
+      toast.success("Products CSV downloaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download CSV");
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const blob = await downloadProductsPDF(search);
+      downloadFile(blob, "products_list.pdf");
+      toast.success("Products PDF downloaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download PDF");
+    }
   };
 
   // delete product
@@ -202,13 +231,16 @@ export default function Products() {
             Manage your product inventory and details
           </p>
         </div>
-        <Button
-          onClick={() => setIsAddModalOpen(true)}
-          className="bg-[#D1FAE5] hover:bg-[#A7F3D0] text-[#065F46] font-semibold flex items-center gap-2 border-none shadow-sm w-full sm:w-auto"
-        >
-          <Plus size={18} />
-          Add Product
-        </Button>
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+ 
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            className="bg-[#D1FAE5] hover:bg-[#A7F3D0] text-[#065F46] font-semibold flex items-center gap-2 border-none shadow-sm w-full sm:w-auto h-10"
+          >
+            <Plus size={18} />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       <div className="border p-6 rounded-2xl">
@@ -236,8 +268,9 @@ export default function Products() {
         onPageChange={setCurrentPage}
         onLimitChange={(limit) => {
           setItemsPerPage(limit);
-          setCurrentPage(1); // Reset to first page when limit changes
+          setCurrentPage(1);
         }}
+        itemName="products"
       />
 
       {/* Details Modal */}

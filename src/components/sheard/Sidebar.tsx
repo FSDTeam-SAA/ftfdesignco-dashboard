@@ -53,6 +53,11 @@ const navItems = [
     href: "/dashboard/category",
     icon: ShoppingBasket,
   },
+  {
+    title: "Inventory",
+    href: "/dashboard/inventory",
+    icon: CreditCard,
+  },
   // {
   //   title: "Shipping Info",
   //   href: "/dashboard/shipping-info",

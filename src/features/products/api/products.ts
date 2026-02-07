@@ -10,6 +10,7 @@ import {
 export const getProducts = async (
   page: number = 1,
   limit: number = 10,
+  // search: string = "",
 ): Promise<ProductResponse> => {
   const response = await axiosInstance.get("/product/all", {
     params: { page, limit },
@@ -36,10 +37,23 @@ export const deleteProduct = async (id: string): Promise<CommonResponse> => {
 export const addProduct = async (
   data: CreateProductData,
 ): Promise<CommonResponse> => {
-  try {
-    const response = await axiosInstance.post("/product/create", data);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await axiosInstance.post("/product/create", data);
+  return response.data;
+};
+// download products as CSV
+export const downloadProductsCSV = async (search: string = "") => {
+  const response = await axiosInstance.get("/product/export/csv", {
+    params: { search },
+    responseType: "blob",
+  });
+  return response.data;
+};
+
+// download products as PDF
+export const downloadProductsPDF = async (search: string = "") => {
+  const response = await axiosInstance.get("/product/export/pdf", {
+    params: { search },
+    responseType: "blob",
+  });
+  return response.data;
 };
