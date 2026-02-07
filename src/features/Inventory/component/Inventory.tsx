@@ -6,6 +6,9 @@ import InventoryHeader from "./InventoryHeader";
 import InventoryTable from "./InventoryTable";
 import Pagination from "@/components/shared/Pagination";
 import { InventoryResponse } from "../types";
+import { downloadInventoryCSV, downloadInventoryPDF } from "../api/Inventory";
+import { downloadFile } from "@/lib/utils";
+import { toast } from "sonner";
 
 export default function Inventory() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,6 +37,28 @@ export default function Inventory() {
         totalPages: 1,
       };
 
+  const handleDownloadCSV = async () => {
+    try {
+      const blob = await downloadInventoryCSV(search);
+      downloadFile(blob, "inventory_list.csv");
+      toast.success("Inventory CSV downloaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download CSV");
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const blob = await downloadInventoryPDF(search);
+      downloadFile(blob, "inventory_list.pdf");
+      toast.success("Inventory PDF downloaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download PDF");
+    }
+  };
+
   if (error) {
     return (
       <div className="p-8 text-center bg-[#FAFAFA] min-h-screen rounded-2xl">
@@ -58,6 +83,8 @@ export default function Inventory() {
           setSearch(val);
           setCurrentPage(1);
         }}
+        onDownloadCSV={handleDownloadCSV}
+        onDownloadPDF={handleDownloadPDF}
       />
 
       <InventoryTable items={items} isLoading={isLoading} />

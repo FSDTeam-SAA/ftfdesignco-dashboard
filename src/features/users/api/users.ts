@@ -52,3 +52,21 @@ export const addMultipleUsers = async (
   });
   return response.data;
 };
+
+// download users as CSV
+export const downloadUsersCSV = async (search: string = "") => {
+  const response = await axiosInstance.get("/user/export/csv", {
+    params: { search },
+    responseType: "blob",
+  });
+  return response.data;
+};
+
+// download users as PDF
+export const downloadUsersPDF = async (search: string = "") => {
+  const response = await axiosInstance.get("/user/export/pdf", {
+    params: { search },
+    responseType: "blob",
+  });
+  return response.data;
+};

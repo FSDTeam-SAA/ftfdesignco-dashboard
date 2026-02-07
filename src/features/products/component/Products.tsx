@@ -7,12 +7,14 @@ import Pagination from "@/components/shared/Pagination";
 import AddProductModal from "./AddProductModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, PencilLine, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { downloadFile } from "@/lib/utils";
+import { downloadProductsCSV, downloadProductsPDF } from "../api/products";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductDetailsModal from "./ProductDetailsModal";
 import EditProductModal from "./EditProductModal";
 import Image from "next/image";
-import { toast } from "sonner";
+import { Plus, Eye, PencilLine, Trash2, FileDown } from "lucide-react";
 
 export default function Products() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -58,6 +60,28 @@ export default function Products() {
   const handleEditProduct = (product: Product) => {
     setSelectedProduct(product);
     setIsEditModalOpen(true);
+  };
+
+  const handleDownloadCSV = async () => {
+    try {
+      const blob = await downloadProductsCSV(search);
+      downloadFile(blob, "products_list.csv");
+      toast.success("Products CSV downloaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download CSV");
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const blob = await downloadProductsPDF(search);
+      downloadFile(blob, "products_list.pdf");
+      toast.success("Products PDF downloaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download PDF");
+    }
   };
 
   // delete product
@@ -208,18 +232,7 @@ export default function Products() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-          {/* <div className="relative w-full sm:w-64">
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="w-full px-4 py-2 bg-[#FAFAFA] border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium text-gray-700 h-10"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1);
-              }}
-            />
-          </div> */}
+ 
           <Button
             onClick={() => setIsAddModalOpen(true)}
             className="bg-[#D1FAE5] hover:bg-[#A7F3D0] text-[#065F46] font-semibold flex items-center gap-2 border-none shadow-sm w-full sm:w-auto h-10"
@@ -255,7 +268,7 @@ export default function Products() {
         onPageChange={setCurrentPage}
         onLimitChange={(limit) => {
           setItemsPerPage(limit);
-          setCurrentPage(1); 
+          setCurrentPage(1);
         }}
         itemName="products"
       />

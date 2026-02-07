@@ -5,7 +5,7 @@ import { useDeleteUser, useUsers } from "../hooks/useUsers";
 import { User } from "../types";
 import Pagination from "@/components/shared/Pagination";
 import { Badge } from "@/components/ui/badge";
-import { Eye, PencilLine, Plus, Trash2 } from "lucide-react";
+import { Eye, PencilLine, Plus, Trash2, FileDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import UserDetailsModal from "./UserDetailsModal";
 import EditUserModal from "./EditUserModal";
@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AddUserModal from "./AddUserModal";
 import ImportUsersModal from "./ImportUsersModal";
+import { downloadFile } from "@/lib/utils";
+import { downloadUsersCSV, downloadUsersPDF } from "../api/users";
 
 import {
   AlertDialog,
@@ -72,6 +74,28 @@ export default function Users() {
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setIsEditModalOpen(true);
+  };
+
+  const handleDownloadCSV = async () => {
+    try {
+      const blob = await downloadUsersCSV(search);
+      downloadFile(blob, "users_list.csv");
+      toast.success("Users CSV downloaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download CSV");
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const blob = await downloadUsersPDF(search);
+      downloadFile(blob, "users_list.pdf");
+      toast.success("Users PDF downloaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download PDF");
+    }
   };
 
   const handleConfirmDelete = async (id: string) => {
@@ -226,18 +250,6 @@ export default function Users() {
           </p>
         </div>
         <div className="flex gap-2">
-          {/* <div className="relative w-full sm:w-64">
-            <input
-              type="text"
-              placeholder="Search users..."
-              className="w-full px-4 py-3 bg-white border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium text-gray-700"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1);
-              }}
-            />
-          </div> */}
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
