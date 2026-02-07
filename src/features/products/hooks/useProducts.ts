@@ -5,7 +5,7 @@ import {
   getProducts,
   addProduct,
 } from "../api/products";
-import { UpdateProductData, CreateProductData } from "../types";
+import { UpdateProductData } from "../types";
 
 // Get All products
 export const useProducts = (
@@ -15,7 +15,7 @@ export const useProducts = (
 ) => {
   return useQuery({
     queryKey: ["products", page, limit, search],
-    queryFn: () => getProducts(page, limit, search),
+    queryFn: () => getProducts(page, limit),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
   });
@@ -44,7 +44,7 @@ export const useDeleteProduct = () => {
 export const useAddProduct = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateProductData) => addProduct(data),
+    mutationFn: (data: FormData) => addProduct(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },

@@ -1,10 +1,5 @@
 import axiosInstance from "@/instance/axios-instance";
-import {
-  CommonResponse,
-  ProductResponse,
-  UpdateProductData,
-  CreateProductData,
-} from "../types";
+import { CommonResponse, ProductResponse, UpdateProductData } from "../types";
 
 // Get All Products
 export const getProducts = async (
@@ -34,10 +29,12 @@ export const deleteProduct = async (id: string): Promise<CommonResponse> => {
 };
 
 // add product
-export const addProduct = async (
-  data: CreateProductData,
-): Promise<CommonResponse> => {
-  const response = await axiosInstance.post("/product/create", data);
+export const addProduct = async (data: FormData): Promise<CommonResponse> => {
+  const response = await axiosInstance.post("/product/create", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 };
 // download products as CSV

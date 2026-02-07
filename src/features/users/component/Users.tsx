@@ -35,7 +35,7 @@ export default function Users() {
   const { data, isLoading, error } = useUsers(
     currentPage,
     itemsPerPage,
-    search,
+    // search,
   );
   const rawUsers: User[] = data?.data || [];
 

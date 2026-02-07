@@ -12,11 +12,10 @@ import { AddUserData, UpdateUserData } from "../types";
 export const useUsers = (
   page: number = 1,
   limit: number = 10,
-  search: string = "",
 ) => {
   return useQuery({
-    queryKey: ["users", page, limit, search],
-    queryFn: () => getUsers(page, limit, search),
+    queryKey: ["users", page, limit],
+    queryFn: () => getUsers(page, limit ),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
   });
