@@ -35,3 +35,35 @@ export interface CommonUserResponse {
   message: string;
   data?: User;
 }
+
+export interface AddUserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password?: string;
+  phoneNumber: string;
+  homeAddress: string;
+  city: string;
+  region: string;
+  categoryName: string;
+  companyName: string;
+  location: string;
+  balance: number;
+}
+export interface CSVErrorDetail {
+  identifier: string;
+  reason: string;
+}
+
+export interface CSVImportSummary {
+  total: number;
+  success: number;
+  failed: number;
+  errors: CSVErrorDetail[];
+}
+
+export interface CSVImportResponse {
+  success: boolean;
+  message: string;
+  data?: CSVImportSummary;
+}

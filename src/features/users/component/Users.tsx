@@ -5,12 +5,15 @@ import { useDeleteUser, useUsers } from "../hooks/useUsers";
 import { User } from "../types";
 import Pagination from "./Pagination";
 import { Badge } from "@/components/ui/badge";
-import { Eye, PencilLine, Trash2 } from "lucide-react";
+import { Eye, PencilLine, Plus, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import UserDetailsModal from "./UserDetailsModal";
 import EditUserModal from "./EditUserModal";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import AddUserModal from "./AddUserModal";
+import ImportUsersModal from "./ImportUsersModal";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,14 +30,24 @@ export default function Users() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { data, isLoading, error } = useUsers(currentPage, itemsPerPage);
-  const users: User[] = data?.data || [];
+  const rawUsers: User[] = data?.data || [];
 
+  // If the API doesn't provide pagination metadata, we assume it returned all users
+  // and handle pagination client-side.
   const pagination = data?.pagination || {
-    total: 0,
+    total: rawUsers.length,
     page: currentPage,
     limit: itemsPerPage,
-    totalPages: 1,
+    totalPages: Math.ceil(rawUsers.length / itemsPerPage) || 1,
   };
+
+  // If we're doing client-side pagination (no metadata from API), slice the array.
+  const users = data?.pagination
+    ? rawUsers
+    : rawUsers.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage,
+      );
 
   const { mutateAsync: deleteUser } = useDeleteUser();
 
@@ -43,6 +56,8 @@ export default function Users() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const handleViewUser = (user: User) => {
     setSelectedUser(user);
@@ -52,11 +67,6 @@ export default function Users() {
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setIsEditModalOpen(true);
-  };
-
-  const handleDeleteClick = (id: string) => {
-    setUserToDelete(id);
-    setIsDeleteConfirmOpen(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -208,6 +218,22 @@ export default function Users() {
             View, manage and update user information securely.
           </p>
         </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+          >
+            <Plus size={20} />
+            Add New User
+          </button>
+          <button
+            onClick={() => setIsImportModalOpen(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+          >
+            <Plus size={20} />
+            Add Multiple User
+          </button>
+        </div>
       </div>
 
       <div className="bg-white p-2 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
@@ -250,6 +276,17 @@ export default function Users() {
         user={selectedUser}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
+      />
+
+      <AddUserModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
+
+      {/* Import Users Modal */}
+      <ImportUsersModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
       />
 
       {/* Delete Confirmation */}

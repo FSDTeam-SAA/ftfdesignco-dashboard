@@ -28,14 +28,17 @@ const Pagination: React.FC<PaginationProps> = ({
 }) => {
   const { total, page, limit, totalPages } = pagination;
 
-  const startIdx = total === 0 ? 0 : (page - 1) * limit + 1;
+  const startIdx = (page - 1) * limit + 1;
   const endIdx = Math.min(page * limit, total);
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pb-10">
       <div className="text-sm text-gray-500 font-medium order-2 sm:order-1">
-        Showing <span className="text-gray-900 font-bold">{startIdx}</span> to{" "}
-        <span className="text-gray-900 font-bold">{endIdx}</span> of{" "}
+        Showing{" "}
+        <span className="text-gray-900 font-bold">
+          {total > 0 ? startIdx : 0}
+        </span>{" "}
+        to <span className="text-gray-900 font-bold">{endIdx}</span> of{" "}
         <span className="text-gray-900 font-bold">{total}</span> users
       </div>
 
