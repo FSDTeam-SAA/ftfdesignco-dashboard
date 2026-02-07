@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { X, Upload, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useAddProduct } from "../hooks/useProducts";
+import { useCategories } from "../../category/hooks/useCategory";
 import { toast } from "sonner";
 import Image from "next/image";
 
@@ -36,6 +37,8 @@ const productSchema = z.object({
   price: z.coerce.number().min(0.01, "Price must be greater than 0"),
   availableQuantity: z.coerce.number().min(0, "Stock must be at least 0"),
   status: z.enum(["active", "inactive"]),
+  role: z.string().min(1, "Category is required"),
+  targetRoles: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -50,6 +53,9 @@ export default function AddProductModal({
   onClose,
 }: Readonly<AddProductModalProps>) {
   const [previews, setPreviews] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const { data: categoryData, isLoading: isCategoriesLoading } =
+    useCategories();
   const { mutate: addProduct, isPending } = useAddProduct();
 
   const {
@@ -74,6 +80,7 @@ export default function AddProductModal({
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
+    setImageFiles((prev) => [...prev, ...files]);
     const newPreviews = files.map((file) => URL.createObjectURL(file));
     setPreviews((prev) => [...prev, ...newPreviews]);
   };
@@ -87,35 +94,56 @@ export default function AddProductModal({
       }
       return updated;
     });
+    setImageFiles((prev) => {
+      const updated = [...prev];
+      updated.splice(index, 1);
+      return updated;
+    });
   };
-  const onSubmit = (data: ProductFormValues) => {
-    const payload = {
-      ...data,
-      images: previews,
-      image: previews[0] || "",
-    };
+  const onSubmit = (values: ProductFormValues) => {
+    const formData = new FormData();
 
-    console.log("Minimal Add Product Data:", payload);
-    toast.info("Check console for captured data");
+    // Append standard fields
+    formData.append("title", values.title);
+    formData.append("type", values.type);
+    formData.append("description", values.description);
+    formData.append("size", values.size);
+    formData.append("availableQuantity", values.availableQuantity.toString());
+    formData.append("price", values.price.toString());
+    formData.append("status", values.status);
+    formData.append("role", values.role);
+    // if (values.targetRoles) {
+    //   formData.append("targetRoles", values.targetRoles);
+    // }
 
-    // API integration is disabled as per latest request
-    /*
-    addProduct(payload, {
+    // Append image(s) - The Postman shows 'image' as a File
+    if (imageFiles.length > 0) {
+      imageFiles.forEach((file) => {
+        formData.append("image", file);
+      });
+    }
+
+    addProduct(formData, {
       onSuccess: () => {
         toast.success("Product added successfully");
         reset();
         setPreviews([]);
+        setImageFiles([]);
         onClose();
       },
-      onError: (error: any) => {
-        const errorMessage =
-          error.response?.data?.message ||
-          error.message ||
-          "Failed to add product";
+      onError: (error: unknown) => {
+        let errorMessage = "Failed to add product";
+        if (error && typeof error === "object" && "response" in error) {
+          const axiosError = error as {
+            response?: { data?: { message?: string } };
+          };
+          errorMessage = axiosError.response?.data?.message || errorMessage;
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
         toast.error(errorMessage);
       },
     });
-    */
   };
 
   return (
@@ -168,20 +196,44 @@ export default function AddProductModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="type" className="text-gray-700 font-semibold">
-                Category / Type *
+              <Label htmlFor="role" className="text-gray-700 font-semibold">
+                Category Name *
               </Label>
-              <Input
-                id="type"
-                {...register("type")}
-                placeholder="e.g. Electronics, Clothing"
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
-                  errors.type ? "border-red-500" : ""
-                }`}
-              />
-              {errors.type && (
+              <Select
+                onValueChange={(val) => {
+                  setValue("role", val);
+                  // Also set 'type' to the category label if needed by backend,
+                  // or keep it separate. The Postman shows 'type' as 'Apparel' and 'role' as ID.
+                  const selectedCategory = categoryData?.data.find(
+                    (c) => c._id === val,
+                  );
+                  if (selectedCategory) {
+                    setValue("type", selectedCategory.roleTitle);
+                  }
+                }}
+              >
+                <SelectTrigger
+                  className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                    errors.role ? "border-red-500" : ""
+                  }`}
+                >
+                  <SelectValue
+                    placeholder={
+                      isCategoriesLoading ? "Loading..." : "Select Category"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryData?.data.map((category) => (
+                    <SelectItem key={category._id} value={category._id}>
+                      {category.roleTitle}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.role && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors.type.message}
+                  {errors.role.message}
                 </p>
               )}
             </div>
@@ -266,6 +318,21 @@ export default function AddProductModal({
                 </SelectContent>
               </Select>
             </div>
+
+            {/* <div className="space-y-2">
+              <Label
+                htmlFor="targetRoles"
+                className="text-gray-700 font-semibold"
+              >
+                Target Roles
+              </Label>
+              <Input
+                id="targetRoles"
+                {...register("targetRoles")}
+                placeholder="e.g. Retail, Wholesale"
+                className="rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C]"
+              />
+            </div> */}
           </div>
 
           <div className="space-y-2">

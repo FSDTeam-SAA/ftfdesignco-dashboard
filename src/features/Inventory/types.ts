@@ -16,7 +16,7 @@ export interface InventoryItem {
   status: string;
   createdAt: string;
   updatedAt: string;
-  targetRoles: string[];
+  // targetRoles: string[];
   totalOrderedQuantity: number;
 }
 
