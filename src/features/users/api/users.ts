@@ -1,5 +1,11 @@
 import axiosInstance from "@/instance/axios-instance";
-import { CommonUserResponse, UpdateUserData, UserResponse } from "../types";
+import {
+  AddUserData,
+  CommonUserResponse,
+  CSVImportResponse,
+  UpdateUserData,
+  UserResponse,
+} from "../types";
 
 // Get All Users
 export const getUsers = async (
@@ -24,5 +30,25 @@ export const editUser = async (
 // Delete User
 export const deleteUser = async (id: string): Promise<CommonUserResponse> => {
   const response = await axiosInstance.delete(`/user/delete/${id}`);
+  return response.data;
+};
+
+// add user
+export const addUser = async (
+  data: AddUserData,
+): Promise<CommonUserResponse> => {
+  const response = await axiosInstance.post("/user/register", data);
+  return response.data;
+};
+
+// add Multiple Users in CSV
+export const addMultipleUsers = async (
+  data: FormData,
+): Promise<CSVImportResponse> => {
+  const response = await axiosInstance.post("/user/employer-register", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 };
