@@ -189,7 +189,7 @@ const ImportUsersModal: React.FC<ImportUsersModalProps> = ({
               type="button"
               onClick={handleUpload}
               disabled={!file || isPending}
-              className="flex-1 h-14 rounded-2xl bg-[#0F172A] hover:bg-[#1E293B] font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 border-none"
+              className="flex-1 h-14 rounded-2xl bg-primary hover:bg-[#1E293B] font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 border-none"
             >
               {isPending ? (
                 <>

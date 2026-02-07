@@ -3,7 +3,7 @@ import { useState } from "react";
 import { isAxiosError } from "axios";
 import { useDeleteUser, useUsers } from "../hooks/useUsers";
 import { User } from "../types";
-import Pagination from "./Pagination";
+import Pagination from "@/components/shared/Pagination";
 import { Badge } from "@/components/ui/badge";
 import { Eye, PencilLine, Plus, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,8 +28,13 @@ import {
 export default function Users() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [search, setSearch] = useState("");
 
-  const { data, isLoading, error } = useUsers(currentPage, itemsPerPage);
+  const { data, isLoading, error } = useUsers(
+    currentPage,
+    itemsPerPage,
+    search,
+  );
   const rawUsers: User[] = data?.data || [];
 
   // If the API doesn't provide pagination metadata, we assume it returned all users
@@ -69,10 +74,9 @@ export default function Users() {
     setIsEditModalOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!userToDelete) return;
+  const handleConfirmDelete = async (id: string) => {
     try {
-      const response = await deleteUser(userToDelete);
+      const response = await deleteUser(id);
       if (response.success) {
         toast.success(response.message || "User deleted successfully");
       } else {
@@ -178,13 +182,16 @@ export default function Users() {
               >
                 <PencilLine size={18} />
               </button>
-              {/* <button
-                onClick={() => handleDeleteClick(user._id)}
+              <button
+                onClick={() => {
+                  setUserToDelete(user._id);
+                  setIsDeleteConfirmOpen(true);
+                }}
                 title="Delete User"
                 className="text-rose-400 hover:text-rose-600 transition-colors p-2 hover:bg-rose-50 rounded-xl cursor-pointer"
               >
                 <Trash2 size={18} />
-              </button> */}
+              </button>
             </div>
           </td>
         </tr>
@@ -219,16 +226,28 @@ export default function Users() {
           </p>
         </div>
         <div className="flex gap-2">
+          {/* <div className="relative w-full sm:w-64">
+            <input
+              type="text"
+              placeholder="Search users..."
+              className="w-full px-4 py-3 bg-white border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium text-gray-700"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+          </div> */}
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
           >
             <Plus size={20} />
             Add New User
           </button>
           <button
             onClick={() => setIsImportModalOpen(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
           >
             <Plus size={20} />
             Add Multiple User
@@ -261,6 +280,7 @@ export default function Users() {
             setItemsPerPage(limit);
             setCurrentPage(1);
           }}
+          itemName="users"
         />
       </div>
 
@@ -309,7 +329,7 @@ export default function Users() {
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleConfirmDelete}
+              onClick={() => userToDelete && handleConfirmDelete(userToDelete)}
               className="rounded-xl bg-rose-500 hover:bg-rose-600 font-semibold h-11 border-none shadow-lg shadow-rose-100"
             >
               Yes, Delete User

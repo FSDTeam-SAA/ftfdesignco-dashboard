@@ -10,9 +10,10 @@ import {
 export const getProducts = async (
   page: number = 1,
   limit: number = 10,
+  // search: string = "",
 ): Promise<ProductResponse> => {
   const response = await axiosInstance.get("/product/all", {
-    params: { page, limit },
+    params: { page, limit},
   });
   return response.data;
 };

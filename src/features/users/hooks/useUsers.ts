@@ -9,10 +9,14 @@ import {
 import { AddUserData, UpdateUserData } from "../types";
 
 // Get All Users
-export const useUsers = (page: number = 1, limit: number = 10) => {
+export const useUsers = (
+  page: number = 1,
+  limit: number = 10,
+  search: string = "",
+) => {
   return useQuery({
-    queryKey: ["users", page, limit],
-    queryFn: () => getUsers(page, limit),
+    queryKey: ["users", page, limit, search],
+    queryFn: () => getUsers(page, limit, search),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
   });

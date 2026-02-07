@@ -3,7 +3,7 @@ import { useState } from "react";
 import { isAxiosError } from "axios";
 import { useDeleteProduct, useProducts } from "../hooks/useProducts";
 import { Product } from "../types";
-import Pagination from "./Pagination";
+import Pagination from "@/components/shared/Pagination";
 import AddProductModal from "./AddProductModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,13 @@ import { toast } from "sonner";
 export default function Products() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [search, setSearch] = useState("");
 
-  const { data, isLoading, error } = useProducts(currentPage, itemsPerPage);
+  const { data, isLoading, error } = useProducts(
+    currentPage,
+    itemsPerPage,
+    search,
+  );
   const rawProducts: Product[] = data?.data || [];
 
   // If the API doesn't provide pagination metadata, we assume it returned all products
@@ -202,13 +207,27 @@ export default function Products() {
             Manage your product inventory and details
           </p>
         </div>
-        <Button
-          onClick={() => setIsAddModalOpen(true)}
-          className="bg-[#D1FAE5] hover:bg-[#A7F3D0] text-[#065F46] font-semibold flex items-center gap-2 border-none shadow-sm w-full sm:w-auto"
-        >
-          <Plus size={18} />
-          Add Product
-        </Button>
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+          {/* <div className="relative w-full sm:w-64">
+            <input
+              type="text"
+              placeholder="Search products..."
+              className="w-full px-4 py-2 bg-[#FAFAFA] border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium text-gray-700 h-10"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+          </div> */}
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            className="bg-[#D1FAE5] hover:bg-[#A7F3D0] text-[#065F46] font-semibold flex items-center gap-2 border-none shadow-sm w-full sm:w-auto h-10"
+          >
+            <Plus size={18} />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       <div className="border p-6 rounded-2xl">
@@ -236,8 +255,9 @@ export default function Products() {
         onPageChange={setCurrentPage}
         onLimitChange={(limit) => {
           setItemsPerPage(limit);
-          setCurrentPage(1); // Reset to first page when limit changes
+          setCurrentPage(1); 
         }}
+        itemName="products"
       />
 
       {/* Details Modal */}
