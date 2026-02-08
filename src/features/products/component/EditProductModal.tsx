@@ -28,6 +28,7 @@ import { useEditProduct } from "../hooks/useProducts";
 import { useCategories } from "../../category/hooks/useCategory";
 import { toast } from "sonner";
 import Image from "next/image";
+import { getProductMainImage } from "@/lib/utils";
 
 const productSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -89,18 +90,16 @@ export default function EditProductModal({
 
       // Handle initial images
       const initialImages: string[] = [];
-      if (typeof product.image === "string") {
-        initialImages.push(product.image);
-      } else if (
-        product.image &&
-        typeof product.image !== "string" &&
-        product.image.url
-      ) {
-        initialImages.push(product.image.url);
-      }
-
       if (product.images && Array.isArray(product.images)) {
-        initialImages.push(...product.images);
+        product.images.forEach((img) => {
+          if (typeof img === "string") {
+            initialImages.push(img);
+          } else if (img && img.url) {
+            initialImages.push(img.url);
+          }
+        });
+      } else if (product.image) {
+        initialImages.push(getProductMainImage(product.image));
       }
 
       setPreviews(Array.from(new Set(initialImages)));

@@ -2,9 +2,10 @@
 
 import React from "react";
 import { InventoryItem } from "../types";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { getProductMainImage } from "@/lib/utils";
+import Image from "next/image";
 
 interface InventoryTableProps {
   items: InventoryItem[];
@@ -14,19 +15,14 @@ interface InventoryTableProps {
 export default function InventoryTable({
   items,
   isLoading,
-}: InventoryTableProps) {
-  const getImageUrl = (image: string | { url: string }) => {
-    if (typeof image === "string") return image;
-    return image?.url;
-  };
-
+}: Readonly<InventoryTableProps>) {
   if (isLoading) {
     return (
       <div className="bg-white rounded-4xl border border-gray-100 shadow-sm overflow-hidden p-6">
         <div className="space-y-4">
-          {[...new Array(5)].map((_, i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton
-              key={`skeleton-${i}`}
+              key={`inventory-skeleton-${i}`}
               className="h-20 w-full rounded-2xl"
             />
           ))}
@@ -59,12 +55,24 @@ export default function InventoryTable({
                 }}
               >
                 <td className="px-6 py-4 rounded-l-2xl border-y border-l">
-                  <Avatar className="h-10 w-10 border border-gray-100 shadow-sm">
-                    <AvatarImage src={getImageUrl(item.image)} />
-                    <AvatarFallback className="bg-emerald-50 text-emerald-600 font-bold text-xs">
-                      {item.title.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-100 border border-gray-100 shadow-sm">
+                    <Image
+                      src={getProductMainImage(item.images || item.image)}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                      width={40}
+                      height={40}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          "/placeholder-product.png";
+                      }}
+                    />
+                    {(item.images?.length || 0) > 1 && (
+                      <div className="absolute bottom-0 right-0 bg-emerald-500 text-white text-[8px] font-bold px-1 rounded-tl-md">
+                        +{item.images!.length - 1}
+                      </div>
+                    )}
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-gray-700 font-semibold border-y">
                   {item._id.slice(-8).toUpperCase()}

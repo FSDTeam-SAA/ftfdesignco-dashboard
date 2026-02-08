@@ -8,18 +8,17 @@ import AddProductModal from "./AddProductModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { downloadFile } from "@/lib/utils";
-import { downloadProductsCSV, downloadProductsPDF } from "../api/products";
+import { downloadFile, getProductMainImage } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductDetailsModal from "./ProductDetailsModal";
 import EditProductModal from "./EditProductModal";
 import Image from "next/image";
-import { Plus, Eye, PencilLine, Trash2, FileDown } from "lucide-react";
+import { Plus, Eye, PencilLine, Trash2 } from "lucide-react";
 
 export default function Products() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [search, setSearch] = useState("");
+  const [search] = useState("");
 
   const { data, isLoading, error } = useProducts(
     currentPage,
@@ -62,28 +61,6 @@ export default function Products() {
     setIsEditModalOpen(true);
   };
 
-  const handleDownloadCSV = async () => {
-    try {
-      const blob = await downloadProductsCSV(search);
-      downloadFile(blob, "products_list.csv");
-      toast.success("Products CSV downloaded successfully");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to download CSV");
-    }
-  };
-
-  const handleDownloadPDF = async () => {
-    try {
-      const blob = await downloadProductsPDF(search);
-      downloadFile(blob, "products_list.pdf");
-      toast.success("Products PDF downloaded successfully");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to download PDF");
-    }
-  };
-
   // delete product
   const handleDeleteProduct = async (id: string) => {
     try {
@@ -124,10 +101,7 @@ export default function Products() {
     }
 
     return products.map((product) => {
-      const imageUrl =
-        typeof product.image === "string"
-          ? product.image
-          : product.image?.url || "";
+      const imageUrl = getProductMainImage(product.images || product.image);
 
       const statusColor =
         product.status === "active"
@@ -143,18 +117,21 @@ export default function Products() {
           }}
         >
           <td className="px-6 py-4 rounded-l-2xl border-y border-l">
-            <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border border-gray-100">
-              {imageUrl ? (
-                <Image
-                  src={imageUrl}
-                  alt={`This is Image ${product.title}`}
-                  className="w-full h-full object-cover"
-                  width={48}
-                  height={48}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                  No Img
+            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border border-gray-100">
+              <Image
+                src={imageUrl}
+                alt={product.title}
+                className="w-full h-full object-cover"
+                width={48}
+                height={48}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "/placeholder-product.png";
+                }}
+              />
+              {(product.images?.length || 0) > 1 && (
+                <div className="absolute bottom-0 right-0 bg-emerald-500 text-white text-[8px] font-bold px-1 rounded-tl-md">
+                  +{product.images!.length - 1}
                 </div>
               )}
             </div>
@@ -232,7 +209,6 @@ export default function Products() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
- 
           <Button
             onClick={() => setIsAddModalOpen(true)}
             className="bg-[#D1FAE5] hover:bg-[#A7F3D0] text-[#065F46] font-semibold flex items-center gap-2 border-none shadow-sm w-full sm:w-auto h-10"

@@ -6,6 +6,7 @@ export interface InventoryImage {
 export interface InventoryItem {
   _id: string;
   image: string | InventoryImage;
+  images?: (string | InventoryImage)[];
   title: string;
   type: string;
   description: string;
