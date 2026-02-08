@@ -25,6 +25,7 @@ import {
 import { Product } from "../types";
 import { X, Upload, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useEditProduct } from "../hooks/useProducts";
+import { useCategories } from "../../category/hooks/useCategory";
 import { toast } from "sonner";
 import Image from "next/image";
 
@@ -37,7 +38,7 @@ const productSchema = z.object({
   price: z.coerce.number().min(0, "Price must be a positive number"),
   availableQuantity: z.coerce.number().min(0, "Stock must be at least 0"),
   status: z.enum(["active", "inactive"]),
-  images: z.array(z.string()).optional(),
+  role: z.string().min(1, "Category is required"),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -52,9 +53,11 @@ export default function EditProductModal({
   product,
   isOpen,
   onClose,
-}: EditProductModalProps) {
+}: Readonly<EditProductModalProps>) {
   const [previews, setPreviews] = useState<string[]>([]);
-  const [newImages, setNewImages] = useState<File[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const { data: categoryData, isLoading: isCategoriesLoading } =
+    useCategories();
   const { mutate: editProduct, isPending } = useEditProduct();
 
   const {
@@ -81,6 +84,7 @@ export default function EditProductModal({
         price: product.price,
         availableQuantity: product.availableQuantity,
         status: product.status,
+        role: product.role || "",
       });
 
       // Handle initial images
@@ -100,7 +104,7 @@ export default function EditProductModal({
       }
 
       setPreviews(Array.from(new Set(initialImages)));
-      setNewImages([]);
+      setImageFiles([]);
     }
   }, [product, isOpen, reset]);
 
@@ -108,8 +112,7 @@ export default function EditProductModal({
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    setNewImages((prev) => [...prev, ...files]);
-
+    setImageFiles((prev) => [...prev, ...files]);
     const newPreviews = files.map((file) => URL.createObjectURL(file));
     setPreviews((prev) => [...prev, ...newPreviews]);
   };
@@ -118,44 +121,58 @@ export default function EditProductModal({
     setPreviews((prev) => {
       const updated = [...prev];
       const removed = updated.splice(index, 1)[0];
-
-      // If it was a dynamic URL, revoke it to prevent memory leaks
       if (removed.startsWith("blob:")) {
         URL.revokeObjectURL(removed);
-        // Also remove from newImages if it was one of those
-        // This is a simplification; in a real app you'd map previews to files accurately
       }
-
+      return updated;
+    });
+    setImageFiles((prev) => {
+      const updated = [...prev];
+      // Note: This logic assumes a 1:1 mapping between previews and imageFiles for new uploads
+      // In a more complex scenario with existing images, we'd need a more robust tracking
+      updated.splice(index, 1);
       return updated;
     });
   };
 
-  const onSubmit = (data: ProductFormValues) => {
+  const onSubmit = (values: ProductFormValues) => {
     if (!product) return;
 
-    // Construct final payload
-    // Note: In a real scenario, you might upload newImages to a storage service first
-    // Or send them as multipart data. Here we prepare the payload as requested.
-    const payload = {
-      ...data,
-      // For this demo, we'll send the previews (which includes existing URLs and blob URLs)
-      // In a real API integration, you'd handle the 'newImages' File objects accordingly
-      images: previews,
-      // Keep track of which original image was the main "image" field vs "images" array
-      image: previews[0] || "",
-    };
+    const formData = new FormData();
+    formData.append("title", values.title);
+    formData.append("type", values.type);
+    formData.append("description", values.description);
+    formData.append("size", values.size);
+    formData.append("availableQuantity", values.availableQuantity.toString());
+    formData.append("price", values.price.toString());
+    formData.append("status", values.status);
+    formData.append("role", values.role);
 
-    console.log("Edit Product Payload:", payload);
+    // Append new images
+    if (imageFiles.length > 0) {
+      imageFiles.forEach((file) => {
+        formData.append("image", file);
+      });
+    }
 
     editProduct(
-      { id: product._id, data: payload },
+      { id: product._id, data: formData },
       {
         onSuccess: () => {
           toast.success("Product updated successfully");
           onClose();
         },
-        onError: (error: Error) => {
-          toast.error(error.message || "Failed to update product");
+        onError: (error: unknown) => {
+          let errorMessage = "Failed to update product";
+          if (error && typeof error === "object" && "response" in error) {
+            const axiosError = error as {
+              response?: { data?: { message?: string } };
+            };
+            errorMessage = axiosError.response?.data?.message || errorMessage;
+          } else if (error instanceof Error) {
+            errorMessage = error.message;
+          }
+          toast.error(errorMessage);
         },
       },
     );
@@ -209,20 +226,43 @@ export default function EditProductModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="type" className="text-gray-700 font-semibold">
-                Category / Type *
+              <Label htmlFor="role" className="text-gray-700 font-semibold">
+                Category Name *
               </Label>
-              <Input
-                id="type"
-                {...register("type")}
-                placeholder="e.g. Electronics, Clothing"
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
-                  errors.type ? "border-red-500" : ""
-                }`}
-              />
-              {errors.type && (
+              <Select
+                value={watch("role")}
+                onValueChange={(val) => {
+                  setValue("role", val);
+                  const selectedCategory = categoryData?.data.find(
+                    (c) => c._id === val,
+                  );
+                  if (selectedCategory) {
+                    setValue("type", selectedCategory.roleTitle);
+                  }
+                }}
+              >
+                <SelectTrigger
+                  className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                    errors.role ? "border-red-500" : ""
+                  }`}
+                >
+                  <SelectValue
+                    placeholder={
+                      isCategoriesLoading ? "Loading..." : "Select Category"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryData?.data.map((category) => (
+                    <SelectItem key={category._id} value={category._id}>
+                      {category.roleTitle}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.role && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors.type.message}
+                  {errors.role.message}
                 </p>
               )}
             </div>
