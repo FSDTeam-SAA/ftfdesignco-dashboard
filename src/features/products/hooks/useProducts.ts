@@ -5,7 +5,6 @@ import {
   getProducts,
   addProduct,
 } from "../api/products";
-import { UpdateProductData } from "../types";
 
 // Get All products
 export const useProducts = (
@@ -24,7 +23,7 @@ export const useProducts = (
 // edit product
 export const useEditProduct = () => {
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateProductData }) =>
+    mutationFn: ({ id, data }: { id: string; data: FormData }) =>
       editProduct(id, data),
   });
 };

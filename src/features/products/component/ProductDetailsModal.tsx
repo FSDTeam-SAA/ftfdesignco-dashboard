@@ -9,13 +9,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Product } from "../types";
 import {
-  Tag,
   DollarSign,
   Info,
   Calendar,
   Image as ImageIcon,
   LucideIcon,
+  Tag,
 } from "lucide-react";
+import { toast } from "sonner";
+import { getProductMainImage } from "@/lib/utils";
+import Image from "next/image";
 
 interface ProductDetailsModalProps {
   product: Product | null;
@@ -62,13 +65,10 @@ export default function ProductDetailsModal({
   product,
   isOpen,
   onClose,
-}: ProductDetailsModalProps) {
+}: Readonly<ProductDetailsModalProps>) {
   if (!product) return null;
 
-  const imageUrl =
-    typeof product.image === "string"
-      ? product.image
-      : product.image?.url || "";
+  const imageUrl = getProductMainImage(product.images || product.image);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -119,20 +119,39 @@ export default function ProductDetailsModal({
           {/* Right Column: Descriptions & Media */}
           <div className="space-y-8">
             <InfoSection title="Product Image" icon={ImageIcon}>
-              {imageUrl ? (
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-100 border border-gray-100">
-                  <img
-                    src={imageUrl}
-                    alt={product.title}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-              ) : (
-                <div className="aspect-video rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 border border-dashed border-gray-200">
-                  No Image Available
-                </div>
-              )}
+              <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-100 border border-gray-100">
+                <Image
+                  src={imageUrl}
+                  alt={product.title}
+                  className="object-cover w-full h-full"
+                  fill
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      "/placeholder-product.png";
+                  }}
+                />
+              </div>
             </InfoSection>
+
+            {product.images && product.images.length > 1 && (
+              <InfoSection title="Additional Images" icon={ImageIcon}>
+                <div className="grid grid-cols-3 gap-2">
+                  {product.images.slice(1).map((img, idx) => (
+                    <div
+                      key={`extra-img-${idx}`}
+                      className="relative aspect-square rounded-lg overflow-hidden border"
+                    >
+                      <Image
+                        src={typeof img === "string" ? img : img.url}
+                        alt={`${product.title} ${idx + 2}`}
+                        className="object-cover w-full h-full"
+                        fill
+                      />
+                    </div>
+                  ))}
+                </div>
+              </InfoSection>
+            )}
 
             <InfoSection title="Description" icon={Tag}>
               <p className="text-gray-600 text-sm leading-relaxed">

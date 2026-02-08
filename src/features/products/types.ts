@@ -14,9 +14,8 @@ export interface Product {
   availableQuantity: number;
   status: "active" | "inactive";
   role?: string;
-  // targetRoles?: string[];
   image?: string | ProductImage;
-  images?: string[]; // Used in some items in the JSON
+  images?: (string | ProductImage)[];
   createdAt: string | null;
   updatedAt: string | null;
 }
