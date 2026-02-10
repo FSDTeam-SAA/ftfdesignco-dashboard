@@ -226,7 +226,7 @@ export default function EditProductModal({
 
             <div className="space-y-2">
               <Label htmlFor="role" className="text-gray-700 font-semibold">
-                Category Name *
+                Job / Role *
               </Label>
               <Select
                 value={watch("role")}

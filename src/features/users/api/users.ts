@@ -23,7 +23,7 @@ export const editUser = async (
   id: string,
   data: UpdateUserData,
 ): Promise<CommonUserResponse> => {
-  const response = await axiosInstance.patch(`/user/update/${id}`, data);
+  const response = await axiosInstance.put(`/user/update-profile`, data);
   return response.data;
 };
 

@@ -28,7 +28,7 @@ import Image from "next/image";
 
 const formSchema = z
   .object({
-    roleTitle: z.string().min(2, "Category name must be at least 2 characters"),
+    roleTitle: z.string().min(2, "Job/Role  must be at least 2 characters"),
     image: z.instanceof(File).optional(),
   })
   .refine((data) => data.image instanceof File, {
@@ -83,12 +83,12 @@ export default function AddCategoryModal({
 
       const response = await addCategory(formData);
       if (response.success) {
-        toast.success(response.message || "Category added successfully");
+        toast.success(response.message || "Job / Role added successfully");
         form.reset({ roleTitle: "", image: undefined });
         setPreview(null);
         onClose();
       } else {
-        toast.error(response.message || "Failed to add category");
+        toast.error(response.message || "Failed to add Job / Role");
       }
     } catch (error: unknown) {
       let errorMessage = "Something went wrong";
@@ -103,7 +103,7 @@ export default function AddCategoryModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Category</DialogTitle>
+          <DialogTitle>Add New Job / Role</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -112,9 +112,9 @@ export default function AddCategoryModal({
               name="roleTitle"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category Name</FormLabel>
+                  <FormLabel>Job / Role</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter category name" {...field} />
+                    <Input placeholder="Enter Job / Role" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,7 +122,7 @@ export default function AddCategoryModal({
             />
 
             <FormItem>
-              <FormLabel>Category Image</FormLabel>
+              <FormLabel>Job / Role Image</FormLabel>
               <div className="flex flex-col items-center justify-center gap-4">
                 {preview ? (
                   <div className="relative w-full h-40 rounded-lg overflow-hidden border">
@@ -188,7 +188,7 @@ export default function AddCategoryModal({
                     Adding...
                   </>
                 ) : (
-                  "Add Category"
+                  "Add Job / Role"
                 )}
               </Button>
             </DialogFooter>

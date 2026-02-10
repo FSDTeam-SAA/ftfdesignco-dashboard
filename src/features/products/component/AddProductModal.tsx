@@ -37,7 +37,7 @@ const productSchema = z.object({
   price: z.coerce.number().min(0.01, "Price must be greater than 0"),
   availableQuantity: z.coerce.number().min(0, "Stock must be at least 0"),
   status: z.enum(["active", "inactive"]),
-  role: z.string().min(1, "Category is required"),
+  role: z.string().min(1, "Job / Role is required"),
   targetRoles: z.string().optional(),
 });
 
@@ -197,7 +197,7 @@ export default function AddProductModal({
 
             <div className="space-y-2">
               <Label htmlFor="role" className="text-gray-700 font-semibold">
-                Category Name *
+                Job / Role *
               </Label>
               <Select
                 onValueChange={(val) => {
@@ -219,7 +219,7 @@ export default function AddProductModal({
                 >
                   <SelectValue
                     placeholder={
-                      isCategoriesLoading ? "Loading..." : "Select Category"
+                      isCategoriesLoading ? "Loading..." : "Select Job/Role"
                     }
                   />
                 </SelectTrigger>

@@ -42,8 +42,8 @@ const addUserSchema = z.object({
   homeAddress: z.string().min(5, "Address must be at least 5 characters"),
   city: z.string().min(2, "City is required"),
   region: z.string().min(2, "Region is required"),
-  categoryName: z.string().min(1, "Category Name is required"),
-  companyName: z.string().min(2, "Company name is required"),
+  categoryName: z.string().min(1, "Job / Role is required"),
+  // companyName: z.string().min(2, "Company name is required"),
   location: z.string().min(2, "Location is required"),
   balance: z.coerce.number().min(0, "Balance must be at least 0"),
 });
@@ -75,12 +75,26 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
       city: "",
       region: "",
       categoryName: "",
-      companyName: "",
+      // companyName: "",
       location: "",
       balance: 0,
     },
   });
 
+  // REGIONAL OFFICE Name 
+  const regionalOffice = [
+    "21 Industrial Blvd. New Castle, DE 19720",
+    "6380 Flank Dr. #600 Harrisburg, PA 17112",
+    "141 Delta Dr. Suite D Pittsburgh, PA 15238",
+    "141 Delta Dr. Suite D Pittsburgh, PA 15238",
+    "1000 Prime Place. Hauppauge, NY 11788",
+    "2 Cranberry Rd. #A5 Parsippany, NJ 07054",
+    "5061 Howerton Way. Suite L Bowie, MD 20715",
+    "10189 Maple Leaf Ct. Ashland, VA 23005",
+    "2551 Eltham Ave. Suite L Norfolk, VA 23513",
+  ];
+
+  // Add User Submit Handler
   const onSubmit = (data: AddUserFormValues) => {
     console.log("Adding New User with Category:", data);
     addUser(data);
@@ -222,7 +236,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 font-bold">
-                        Category Name
+                        Job / Role
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
@@ -234,8 +248,8 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                             <SelectValue
                               placeholder={
                                 isLoadingCategories
-                                  ? "Loading categories..."
-                                  : "Select a category"
+                                  ? "Loading Job/Role..."
+                                  : "Select a Job/Role"
                               }
                             />
                           </SelectTrigger>
@@ -247,7 +261,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                             </div>
                           ) : categories.length === 0 ? (
                             <div className="p-4 text-center text-sm text-gray-500">
-                              No categories found
+                              No Job/Role found
                             </div>
                           ) : (
                             categories.map((category) => (
@@ -313,7 +327,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 font-bold">
-                        Region
+                        State
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -329,39 +343,31 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="companyName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-bold">
-                        Company Name
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Acme Corp"
-                          {...field}
-                          className="rounded-xl border-gray-200 h-12 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
                 <FormField
                   control={form.control}
                   name="location"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 font-bold">
-                        Location
+                        REGIONAL OFFICE
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Downtown"
-                          {...field}
-                          className="rounded-xl border-gray-200 h-12 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                        />
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <SelectTrigger className="rounded-xl border-gray-200 h-12 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                            <SelectValue placeholder="Select Regional Office" />
+                          </SelectTrigger>
+                          <SelectContent className="cursor-pointer">
+                            {regionalOffice.map((office) => (
+                              <SelectItem key={office} value={office} className="border border-gray-200 my-1 cursor-pointer">
+                                {office}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

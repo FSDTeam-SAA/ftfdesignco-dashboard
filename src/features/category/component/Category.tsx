@@ -140,7 +140,7 @@ export default function Category() {
             <thead className="bg-transparent">
               <tr className="text-left text-gray-800 font-semibold">
                 <th className="px-6 py-2">Image</th>
-                <th className="px-6 py-2">Category Name</th>
+                <th className="px-6 py-2">Job / Role</th>
                 <th className="px-6 py-2 text-center">Action</th>
               </tr>
             </thead>
