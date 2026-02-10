@@ -63,8 +63,8 @@ export default function Header() {
         return "Track shipments and manage logistics.";
       case "/dashboard/inventory-page":
         return "Monitor stock levels and warehouse data.";
-      case "/dashboard/category":
-        return "Manage your product categories.";
+      case "/dashboard/job-role":
+        return "Manage your product Job/Role.";
       default:
         return "";
     }

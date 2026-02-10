@@ -4,12 +4,10 @@ import axiosInstance from "@/instance/axios-instance";
 
 // get all inventory with pagination
 export const getInventory = async (
-  page: number = 1,
-  limit: number = 10,
-  search: string = "",
+  region: string = "",
 ) => {
   const response = await axiosInstance.get(
-    `/product/inventories?page=${page}&limit=${limit}&search=${search}`,
+    `/product/rigion/products?rigion=${region}`,
   );
   return response.data;
 };
