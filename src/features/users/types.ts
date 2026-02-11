@@ -4,6 +4,13 @@ export interface User {
   lastName: string;
   email: string;
   role: string;
+  phoneNumber?: string;
+  homeAddress?: string;
+  city?: string;
+  region?: string;
+  categoryName?: string;
+  location?: string;
+  balance?: number;
   profileImage?: string;
   status?: "active" | "inactive";
   createdAt?: string;
@@ -26,7 +33,14 @@ export interface UpdateUserData {
   firstName?: string;
   lastName?: string;
   email?: string;
-  role?: string;
+  password?: string;
+  phoneNumber?: string;
+  homeAddress?: string;
+  city?: string;
+  region?: string;
+  categoryName?: string;
+  location?: string;
+  balance?: number;
   status?: "active" | "inactive";
 }
 
@@ -46,7 +60,7 @@ export interface AddUserData {
   city: string;
   region: string;
   categoryName: string;
-  companyName: string;
+  // companyName: string;
   location: string;
   balance: number;
 }

@@ -1,10 +1,9 @@
-import Inventory from "@/features/Inventory/component/Inventory";
+import InventoryLanding from "@/features/Inventory/component/InventoryLanding";
 
- 
 export default function page() {
   return (
     <div>
-       <Inventory/>
+      <InventoryLanding />
     </div>
-  )
+  );
 }

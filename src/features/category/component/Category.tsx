@@ -120,9 +120,9 @@ export default function Category() {
     <div className="p-4 md:p-8 space-y-6 bg-white min-h-screen">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Categories</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">Job/Role</h1>
           <p className="text-gray-500 font-medium">
-            Manage your product roles and categories
+            Manage your product roles and Job
           </p>
         </div>
         <Button
@@ -130,7 +130,7 @@ export default function Category() {
           className="bg-[#D1FAE5] hover:bg-[#A7F3D0] text-[#065F46] font-semibold flex items-center gap-2 border-none shadow-sm w-full sm:w-auto"
         >
           <Plus size={18} />
-          Add Category
+          Add Job/Role
         </Button>
       </div>
 
@@ -140,7 +140,7 @@ export default function Category() {
             <thead className="bg-transparent">
               <tr className="text-left text-gray-800 font-semibold">
                 <th className="px-6 py-2">Image</th>
-                <th className="px-6 py-2">Category Name</th>
+                <th className="px-6 py-2">Job / Role</th>
                 <th className="px-6 py-2 text-center">Action</th>
               </tr>
             </thead>

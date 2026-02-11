@@ -14,6 +14,8 @@ export interface Product {
   availableQuantity: number;
   status: "active" | "inactive";
   role?: string;
+  rigion?: string;
+  region?: string;
   image?: string | ProductImage;
   images?: (string | ProductImage)[];
   createdAt: string | null;

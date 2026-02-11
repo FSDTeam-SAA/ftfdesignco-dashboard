@@ -30,6 +30,18 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { getProductMainImage } from "@/lib/utils";
 
+// REGIONAL OFFICE Name
+const regionalOffice = [
+  "21 Industrial Blvd. New Castle, DE 19720",
+  "6380 Flank Dr. #600 Harrisburg, PA 17112",
+  "141 Delta Dr. Suite D Pittsburgh, PA 15238",
+  "1000 Prime Place. Hauppauge, NY 11788",
+  "2 Cranberry Rd. #A5 Parsippany, NJ 07054",
+  "5061 Howerton Way. Suite L Bowie, MD 20715",
+  "10189 Maple Leaf Ct. Ashland, VA 23005",
+  "2551 Eltham Ave. Suite L Norfolk, VA 23513",
+];
+
 const productSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   sku: z.string().optional(),
@@ -40,6 +52,7 @@ const productSchema = z.object({
   availableQuantity: z.coerce.number().min(0, "Stock must be at least 0"),
   status: z.enum(["active", "inactive"]),
   role: z.string().min(1, "Category is required"),
+  region: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -86,6 +99,7 @@ export default function EditProductModal({
         availableQuantity: product.availableQuantity,
         status: product.status,
         role: product.role || "",
+        region: product.region || "",
       });
 
       // Handle initial images
@@ -146,6 +160,9 @@ export default function EditProductModal({
     formData.append("price", values.price.toString());
     formData.append("status", values.status);
     formData.append("role", values.role);
+    if (values.region) {
+      formData.append("rigion", values.region);
+    }
 
     // Append new images
     if (imageFiles.length > 0) {
@@ -226,7 +243,7 @@ export default function EditProductModal({
 
             <div className="space-y-2">
               <Label htmlFor="role" className="text-gray-700 font-semibold">
-                Category Name *
+                Job / Role *
               </Label>
               <Select
                 value={watch("role")}
@@ -343,6 +360,31 @@ export default function EditProductModal({
                 <SelectContent>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="region" className="text-gray-700 font-semibold">
+                Regional Office *
+              </Label>
+              <Select
+                value={watch("region")}
+                onValueChange={(val) => setValue("region", val)}
+              >
+                <SelectTrigger className="rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C]">
+                  <SelectValue placeholder="Select Regional Office" />
+                </SelectTrigger>
+                <SelectContent className="cursor-pointer">
+                  {regionalOffice.map((office) => (
+                    <SelectItem
+                      key={office}
+                      value={office}
+                      className="border border-gray-200 my-1 cursor-pointer"
+                    >
+                      {office}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

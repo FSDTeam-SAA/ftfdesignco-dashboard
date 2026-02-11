@@ -36,10 +36,23 @@ const productSchema = z.object({
   size: z.string().min(1, "Size is required"),
   price: z.coerce.number().min(0.01, "Price must be greater than 0"),
   availableQuantity: z.coerce.number().min(0, "Stock must be at least 0"),
-  status: z.enum(["active", "inactive"]),
-  role: z.string().min(1, "Category is required"),
+  // status: z.enum(["active", "inactive"]),
+  role: z.string().min(1, "Job / Role is required"),
   targetRoles: z.string().optional(),
+  region: z.string().optional(),
 });
+
+// REGIONAL OFFICE Name
+const regionalOffice = [
+  "21 Industrial Blvd. New Castle, DE 19720",
+  "6380 Flank Dr. #600 Harrisburg, PA 17112",
+  "141 Delta Dr. Suite D Pittsburgh, PA 15238",
+  "1000 Prime Place. Hauppauge, NY 11788",
+  "2 Cranberry Rd. #A5 Parsippany, NJ 07054",
+  "5061 Howerton Way. Suite L Bowie, MD 20715",
+  "10189 Maple Leaf Ct. Ashland, VA 23005",
+  "2551 Eltham Ave. Suite L Norfolk, VA 23513",
+];
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
@@ -68,13 +81,14 @@ export default function AddProductModal({
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      status: "active",
+      // status: "active",
       price: 0,
       availableQuantity: 0,
+      region: "",
     },
   });
 
-  const currentStatus = watch("status");
+  // const currentStatus = watch("status");
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -110,8 +124,14 @@ export default function AddProductModal({
     formData.append("size", values.size);
     formData.append("availableQuantity", values.availableQuantity.toString());
     formData.append("price", values.price.toString());
-    formData.append("status", values.status);
+    formData.append("status", "active");
     formData.append("role", values.role);
+    if (values.region) {
+      formData.append("rigion", values.region);
+    }
+    if (values.sku) {
+      formData.append("sku", values.sku);
+    }
     // if (values.targetRoles) {
     //   formData.append("targetRoles", values.targetRoles);
     // }
@@ -119,7 +139,7 @@ export default function AddProductModal({
     // Append image(s) - The Postman shows 'image' as a File
     if (imageFiles.length > 0) {
       imageFiles.forEach((file) => {
-        formData.append("image", file);
+        formData.append("images", file);
       });
     }
 
@@ -197,7 +217,7 @@ export default function AddProductModal({
 
             <div className="space-y-2">
               <Label htmlFor="role" className="text-gray-700 font-semibold">
-                Category Name *
+                Job / Role *
               </Label>
               <Select
                 onValueChange={(val) => {
@@ -219,7 +239,7 @@ export default function AddProductModal({
                 >
                   <SelectValue
                     placeholder={
-                      isCategoriesLoading ? "Loading..." : "Select Category"
+                      isCategoriesLoading ? "Loading..." : "Select Job/Role"
                     }
                   />
                 </SelectTrigger>
@@ -299,7 +319,7 @@ export default function AddProductModal({
               )}
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="status" className="text-gray-700 font-semibold">
                 Status *
               </Label>
@@ -317,22 +337,38 @@ export default function AddProductModal({
                   <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* <div className="space-y-2">
-              <Label
-                htmlFor="targetRoles"
-                className="text-gray-700 font-semibold"
-              >
-                Target Roles
-              </Label>
-              <Input
-                id="targetRoles"
-                {...register("targetRoles")}
-                placeholder="e.g. Retail, Wholesale"
-                className="rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C]"
-              />
             </div> */}
+
+            <div className="space-y-2">
+              <Label htmlFor="region" className="text-gray-700 font-semibold">
+                Regional Office *
+              </Label>
+              <Select onValueChange={(val) => setValue("region", val)}>
+                <SelectTrigger
+                  className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                    errors.region ? "border-red-500" : ""
+                  }`}
+                >
+                  <SelectValue placeholder="Select Regional Office" />
+                </SelectTrigger>
+                <SelectContent className="cursor-pointer">
+                  {regionalOffice.map((office) => (
+                    <SelectItem
+                      key={office}
+                      value={office}
+                      className="border border-gray-200 my-1 cursor-pointer"
+                    >
+                      {office}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.region && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.region.message}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">

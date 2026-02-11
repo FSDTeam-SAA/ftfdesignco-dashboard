@@ -16,7 +16,6 @@ import {
   LucideIcon,
   Tag,
 } from "lucide-react";
-import { toast } from "sonner";
 import { getProductMainImage } from "@/lib/utils";
 import Image from "next/image";
 
@@ -101,8 +100,9 @@ export default function ProductDetailsModal({
                 label="SKU"
                 value={product.sku || product._id.slice(-8).toUpperCase()}
               />
-              <InfoItem label="Category / Type" value={product.type} />
-              <InfoItem label="Size" value={product.size} />
+              <InfoItem label="Job / Role" value={product.type} />
+              <InfoItem label="Size / Variant" value={product.size} />
+              <InfoItem label="Regional Office" value={product.rigion} />
             </InfoSection>
 
             <InfoSection title="Inventory & Pricing" icon={DollarSign}>

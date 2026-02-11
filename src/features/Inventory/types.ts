@@ -13,6 +13,7 @@ export interface InventoryItem {
   size: string;
   availableQuantity: number;
   price: number;
+  rigion?: string;
   role: string;
   status: string;
   createdAt: string;
@@ -21,17 +22,11 @@ export interface InventoryItem {
   totalOrderedQuantity: number;
 }
 
-export interface InventoryMeta {
-  total: number;
-  page: number;
-  limit: number;
-  totalPage: number;
-}
-
 export interface InventoryResponse {
   success: boolean;
-  message: string;
-  statusCode: number;
+  message?: string;
   data: InventoryItem[];
-  meta: InventoryMeta;
+  page: number;
+  limit: number;
+  rigion?: string;
 }

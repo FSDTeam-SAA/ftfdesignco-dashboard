@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useInventory } from "../hooks/useInventory";
 import InventoryHeader from "./InventoryHeader";
 import InventoryTable from "./InventoryTable";
@@ -8,31 +9,15 @@ import { InventoryResponse } from "../types";
 import { downloadInventoryCSV, downloadInventoryPDF } from "../api/Inventory";
 import { downloadFile } from "@/lib/utils";
 import { toast } from "sonner";
-import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeftIcon } from "lucide-react";
 
-// REGIONAL OFFICE Name
-const regionalOffice = [
-  "21 Industrial Blvd. New Castle, DE 19720",
-  "6380 Flank Dr. #600 Harrisburg, PA 17112",
-  "141 Delta Dr. Suite D Pittsburgh, PA 15238",
-  "1000 Prime Place. Hauppauge, NY 11788",
-  "2 Cranberry Rd. #A5 Parsippany, NJ 07054",
-  "5061 Howerton Way. Suite L Bowie, MD 20715",
-  "10189 Maple Leaf Ct. Ashland, VA 23005",
-  "2551 Eltham Ave. Suite L Norfolk, VA 23513",
-];
-
-export default function Inventory() {
-  const router = useRouter();
+export default function InventoryDetail() {
   const searchParams = useSearchParams();
-  const regionParam = searchParams.get("region");
-
-  const selectedRegion =
-    regionalOffice.find((office) => office === regionParam) ||
-    regionalOffice[0];
+  const regionName = searchParams.get("name") || "";
   const [search, setSearch] = useState("");
+  const router = useRouter();
 
-  const { data, isLoading, error } = useInventory(selectedRegion);
+  const { data, isLoading, error } = useInventory(regionName);
   const inventoryResponse = data as InventoryResponse;
 
   const items = inventoryResponse?.data || [];
@@ -59,11 +44,13 @@ export default function Inventory() {
     }
   };
 
-  const handleRegionChange = (office: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("region", office);
-    router.push(`/dashboard/inventory?${params.toString()}`);
-  };
+  if (!regionName) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-gray-500">No region selected.</p>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -83,29 +70,28 @@ export default function Inventory() {
 
   return (
     <div className="p-4 md:p-8 space-y-8 bg-[#FAFAFA] min-h-full rounded-2xl">
+      <div className="flex justify-start">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 cursor-pointer hover:text-gray-600 transition-all duration-300 ease-in-out"
+        >
+          <ArrowLeftIcon className="w-5 h-5" />
+          Back
+        </button>
+      </div>
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+          Regional Office
+        </span>
+        <h1 className="text-2xl font-bold text-gray-900">{regionName}</h1>
+      </div>
+
       <InventoryHeader
         search={search}
         onSearchChange={(val) => setSearch(val)}
         onDownloadCSV={handleDownloadCSV}
         onDownloadPDF={handleDownloadPDF}
       />
-
-      {/* Region Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide cursor-pointer">
-        {regionalOffice.map((office) => (
-          <button
-            key={office}
-            onClick={() => handleRegionChange(office)}
-            className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${
-              selectedRegion === office
-                ? "bg-[#22AD5C] text-white shadow-md shadow-green-100 cursor-pointer"
-                : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-100 cursor-pointer"
-            }`}
-          >
-            {office}
-          </button>
-        ))}
-      </div>
 
       <InventoryTable items={items} isLoading={isLoading} />
 
