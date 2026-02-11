@@ -1,6 +1,7 @@
 // src/features/dashboard/hooks/useAnalytics.ts
 import { useQuery } from "@tanstack/react-query";
-import { getInventory } from "../api/Inventory";
+import { editProduct, getInventory } from "../api/Inventory";
+import { useMutation } from "@tanstack/react-query";
 
 export const useInventory = ( 
   region: string = "",
@@ -10,5 +11,14 @@ export const useInventory = (
     queryFn: () => getInventory(region),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
+  });
+};
+
+
+// edit product
+export const useEditProduct = () => {
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: FormData }) =>
+      editProduct(id, data),
   });
 };
