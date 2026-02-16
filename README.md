@@ -1,138 +1,90 @@
-## 🚀 Template Overview Website
+# 🚀 FTF Design Co. Dashboard
 
-A modern, scalable website built using **Next.js 14**, **TypeScript**, **Tailwind CSS**, **Shadcn UI**, **Lucide Icons**, **Zod**, **Axios**, **TanStack Query**, and **Sonner Toast** — with a clean architecture and modular folder structure.
-
----
-
-## 🚀 Tech Stack
-
-- **Framework:** [Next.js 16.0.7](https://nextjs.org/)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS + Shadcn/UI
-- **Icons:** Lucide Icons
-- **Form Validation:** Zod
-- **Data Fetching:** Axios + TanStack Query
-- **Notifications:** Sonner Toast
-- **Linting & Commit Hooks:** ESLint, Husky, Commitlint, Lint-staged
+A high-performance, developer-centric administrative dashboard built with **Next.js 16**, **React 19**, and **Tailwind CSS 4**. Designed for scalability and ease of use, this dashboard provides robust solutions for managing inventory, products, and user data with a premium UI experience.
 
 ---
 
+## 🛠️ Tech Stack
+
+- **Framework:** [Next.js 16.1.4](https://nextjs.org/) (App Router)
+- **Library:** [React 19.2.3](https://react.dev/)
+- **Styling:** [Tailwind CSS 4](https://tailwindcss.com/) + [Shadcn UI](https://ui.shadcn.com/)
+- **Headless UI:** [Radix UI](https://www.radix-ui.com/)
+- **Data Fetching:** [Axios](https://axios-http.com/) + [TanStack Query v5](https://tanstack.com/query/latest)
+- **Forms & Validation:** [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/)
+- **Icons:** [Lucide React](https://lucide.dev/) + [React Icons](https://react-icons.github.io/react-icons/)
+- **Authentication:** [NextAuth.js](https://next-auth.js.org/)
+- **Quality Assurance:** [Husky](https://typicode.github.io/husky/), [Commitlint](https://commitlint.js.org/), [ESLint](https://eslint.org/), [Prettier](https://prettier.io/)
+
 ---
 
-## ⚙️ Setup & Installation
+## ✨ Features Key Features
 
-# 1️⃣ Clone the repository
+- **📊 Comprehensive Dashboard:** Real-time overview of key metrics and business analytics.
+- **📦 Product Management:** Full CRUD capabilities for managing a diverse product catalog.
+- **🏬 Inventory Tracking:** Specialized tools for monitoring stock levels and warehouse operations.
+- **📁 Category Organization:** Flexible categorization system for better data structure.
+- **👥 User Management:** Secure administration of user accounts and permissions.
+- **🔒 Secure Architecture:** Route-level protection and robust authentication flow via NextAuth.
+- **🎨 Modern UI/UX:** Responsive design using Tailwind 4 and Shadcn UI components.
+- **🏗️ Clean Architecture:** Modular folder structure following industry best practices.
 
-git clone https://github.com/RashedulHaqueRasel1/Template-Overview-Website.git
+---
 
-# 2️⃣ Navigate to the project
+## ⚙️ Development Setup
 
-cd Template-Overview-Website
+### 1. Clone the repository
 
-# 3️⃣ Install dependencies
+```bash
+git clone https://github.com/RashedulHaqueRasel1/ftfdesignco-dashboard.git
+```
 
+### 2. Install dependencies
+
+```bash
 npm install
+```
 
-# 4️⃣ Run development server
+### 3. Environment Configuration
 
+Create a `.env` file in the root directory and add your environment variables (refer to `.env.example` if available).
+
+### 4. Run development server
+
+```bash
 npm run dev
+```
 
-Then open http://localhost:3000 in your browser.
-
-🧩 Features
-✨ Modern UI built with Tailwind + Shadcn
-
-🔐 Authentication with NextAuth.js
-
-⚡ API integration with Axios
-
-🔍 Data fetching & caching using TanStack Query
-
-🧠 Strong validation using Zod
-
-💬 Beautiful toasts with Sonner
-
-🧰 Modular, scalable folder structure
-
-🔒 Husky pre-commit hook + Commitlint setup
-
-📦 Scripts
-Command Description
-npm run dev Start development server
-npm run build Create production build
-npm run start Run production build
-npm run lint Run ESLint
-npm run format Prettify code (if configured)
-
-🧪 Husky Setup (Pre-commit)
-This project uses Husky and Lint-staged to enforce clean commits.
-
-# Add a new hook
-
-npx husky add .husky/pre-commit "npm run lint"
-git add .husky/pre-commit
-
---
-
-## 📚 Book Creation Flow
-
-The book creation feature allows users to transform images into sketch coloring books with the following capabilities:
-
-### Generation Limits (Security)
-
-To prevent API exploitation, strict generation limits are enforced:
-
-| Feature                        | Limit | Behavior                                             |
-| ------------------------------ | ----- | ---------------------------------------------------- |
-| Cover Image Generation         | 3 max | Cannot be reset; persists in localStorage            |
-| Line Art Conversion (per page) | 3 max | Cannot be reset; persists even if images are deleted |
-
-**Note:** Users receive toast notifications showing remaining generation attempts after each successful conversion.
-
-### Mid-Flow Book Preview
-
-Users can preview their book at any point during creation:
-
-1. Click **"Preview Book"** button on the image upload page
-2. View PDF preview of current progress (opens in new tab)
-3. Click **"Return to Creation"** to resume exactly where they left off
-
-State is preserved across preview navigation via the `returnStep` mechanism.
-
-### State Management
-
-All book creation state is managed via Zustand with localStorage persistence:
-
-- Progress is automatically saved and restored
-- Users can close the browser and resume later
-- State includes: images, texts, generation counts, step position
-
-### Post-Login Redirect
-
-When login is required during book creation:
-
-- User is redirected to `/login?callbackUrl=/create-book`
-- After successful login, user returns to `/create-book`
-- Book creation state is preserved via localStorage
-
-### Key Files
-
-| File                                | Purpose                                  |
-| ----------------------------------- | ---------------------------------------- |
-| `store/book-store.ts`               | Zustand store with all state and actions |
-| `types.ts`                          | TypeScript interfaces and constants      |
-| `components/image-upload-page.tsx`  | Page image upload and conversion         |
-| `components/landing-page.tsx`       | Cover image upload                       |
-| `components/finalize-book-page.tsx` | Book review and preview                  |
-| `features/auth/component/Login.tsx` | Login with callbackUrl redirect          |
+Open [http://localhost:3000](http://localhost:3000) to view the result.
 
 ---
 
-🧑‍💻 Author
+## 📦 Available Scripts
 
-Rashedul Haque Rasel
+| Command         | Description                                   |
+| :-------------- | :-------------------------------------------- |
+| `npm run dev`   | Starts the development server with Turbopack. |
+| `npm run build` | Creates an optimized production build.        |
+| `npm run start` | Runs the compiled production application.     |
+| `npm run lint`  | Performs static code analysis via ESLint.     |
 
-Built with ❤️ using Next.js, TypeScript, and Tailwind CSS.
+---
 
-📧 [rashedulhaquerasel1@gmail.com](rashedulhaquerasel1@gmail.com)
-🌐 [Protfolio](https://rashedul-haque-rasel.vercel.app)
+## 🤝 Project Standards
+
+This project enforces high code quality standards through:
+
+- **Husky & Lint-staged:** Automated linting on every commit.
+- **Commitlint:** Ensures conventional commit messages for a clean git history.
+- **TypeScript:** Strict type-checking for better developer experience and stability.
+
+---
+
+## 🧑💻 Author
+
+**Rashedul Haque Rasel**
+
+Built with ❤️ using the latest web technologies.
+
+📧 [rashedulhaquerasel1@gmail.com](mailto:rashedulhaquerasel1@gmail.com)
+🌐 [Portfolio](https://rashedul-haque-rasel.vercel.app)
