@@ -3,22 +3,28 @@ import { useState } from "react";
 import { isAxiosError } from "axios";
 import { useDeleteProduct, useProducts } from "../hooks/useProducts";
 import { Product } from "../types";
-import Pagination from "./Pagination";
+import Pagination from "@/components/shared/Pagination";
 import AddProductModal from "./AddProductModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, PencilLine, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { downloadFile, getProductMainImage } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductDetailsModal from "./ProductDetailsModal";
 import EditProductModal from "./EditProductModal";
 import Image from "next/image";
-import { toast } from "sonner";
+import { Plus, Eye, PencilLine, Trash2 } from "lucide-react";
 
 export default function Products() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [search] = useState("");
 
-  const { data, isLoading, error } = useProducts(currentPage, itemsPerPage);
+  const { data, isLoading, error } = useProducts(
+    currentPage,
+    itemsPerPage,
+    search,
+  );
   const rawProducts: Product[] = data?.data || [];
 
   // If the API doesn't provide pagination metadata, we assume it returned all products
@@ -95,10 +101,7 @@ export default function Products() {
     }
 
     return products.map((product) => {
-      const imageUrl =
-        typeof product.image === "string"
-          ? product.image
-          : product.image?.url || "";
+      const imageUrl = getProductMainImage(product.images || product.image);
 
       const statusColor =
         product.status === "active"
@@ -114,18 +117,21 @@ export default function Products() {
           }}
         >
           <td className="px-6 py-4 rounded-l-2xl border-y border-l">
-            <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border border-gray-100">
-              {imageUrl ? (
-                <Image
-                  src={imageUrl}
-                  alt={`This is Image ${product.title}`}
-                  className="w-full h-full object-cover"
-                  width={48}
-                  height={48}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                  No Img
+            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border border-gray-100">
+              <Image
+                src={imageUrl}
+                alt={product.title}
+                className="w-full h-full object-cover"
+                width={48}
+                height={48}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "/placeholder-product.png";
+                }}
+              />
+              {(product.images?.length || 0) > 1 && (
+                <div className="absolute bottom-0 right-0 bg-emerald-500 text-white text-[8px] font-bold px-1 rounded-tl-md">
+                  +{product.images!.length - 1}
                 </div>
               )}
             </div>
@@ -202,13 +208,15 @@ export default function Products() {
             Manage your product inventory and details
           </p>
         </div>
-        <Button
-          onClick={() => setIsAddModalOpen(true)}
-          className="bg-[#D1FAE5] hover:bg-[#A7F3D0] text-[#065F46] font-semibold flex items-center gap-2 border-none shadow-sm w-full sm:w-auto"
-        >
-          <Plus size={18} />
-          Add Product
-        </Button>
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            className="bg-[#D1FAE5] hover:bg-[#A7F3D0] text-[#065F46] font-semibold flex items-center gap-2 border-none shadow-sm w-full sm:w-auto h-10"
+          >
+            <Plus size={18} />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       <div className="border p-6 rounded-2xl">
@@ -236,8 +244,9 @@ export default function Products() {
         onPageChange={setCurrentPage}
         onLimitChange={(limit) => {
           setItemsPerPage(limit);
-          setCurrentPage(1); // Reset to first page when limit changes
+          setCurrentPage(1);
         }}
+        itemName="products"
       />
 
       {/* Details Modal */}

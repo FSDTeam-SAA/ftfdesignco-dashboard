@@ -3,14 +3,19 @@ import { useState } from "react";
 import { isAxiosError } from "axios";
 import { useDeleteUser, useUsers } from "../hooks/useUsers";
 import { User } from "../types";
-import Pagination from "./Pagination";
+import Pagination from "@/components/shared/Pagination";
 import { Badge } from "@/components/ui/badge";
-import { Eye, PencilLine, Trash2 } from "lucide-react";
+import { Eye, PencilLine, Plus, Trash2, FileDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import UserDetailsModal from "./UserDetailsModal";
 import EditUserModal from "./EditUserModal";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import AddUserModal from "./AddUserModal";
+import ImportUsersModal from "./ImportUsersModal";
+import { downloadFile } from "@/lib/utils";
+import { downloadUsersCSV, downloadUsersPDF } from "../api/users";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,16 +30,31 @@ import {
 export default function Users() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [search, setSearch] = useState("");
 
-  const { data, isLoading, error } = useUsers(currentPage, itemsPerPage);
-  const users: User[] = data?.data || [];
+  const { data, isLoading, error } = useUsers(
+    currentPage,
+    itemsPerPage,
+    // search,
+  );
+  const rawUsers: User[] = data?.data || [];
 
+  // If the API doesn't provide pagination metadata, we assume it returned all users
+  // and handle pagination client-side.
   const pagination = data?.pagination || {
-    total: 0,
+    total: rawUsers.length,
     page: currentPage,
     limit: itemsPerPage,
-    totalPages: 1,
+    totalPages: Math.ceil(rawUsers.length / itemsPerPage) || 1,
   };
+
+  // If we're doing client-side pagination (no metadata from API), slice the array.
+  const users = data?.pagination
+    ? rawUsers
+    : rawUsers.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage,
+      );
 
   const { mutateAsync: deleteUser } = useDeleteUser();
 
@@ -43,6 +63,8 @@ export default function Users() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const handleViewUser = (user: User) => {
     setSelectedUser(user);
@@ -54,15 +76,31 @@ export default function Users() {
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteClick = (id: string) => {
-    setUserToDelete(id);
-    setIsDeleteConfirmOpen(true);
+  const handleDownloadCSV = async () => {
+    try {
+      const blob = await downloadUsersCSV(search);
+      downloadFile(blob, "users_list.csv");
+      toast.success("Users CSV downloaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download CSV");
+    }
   };
 
-  const handleConfirmDelete = async () => {
-    if (!userToDelete) return;
+  const handleDownloadPDF = async () => {
     try {
-      const response = await deleteUser(userToDelete);
+      const blob = await downloadUsersPDF(search);
+      downloadFile(blob, "users_list.pdf");
+      toast.success("Users PDF downloaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download PDF");
+    }
+  };
+
+  const handleConfirmDelete = async (id: string) => {
+    try {
+      const response = await deleteUser(id);
       if (response.success) {
         toast.success(response.message || "User deleted successfully");
       } else {
@@ -168,13 +206,16 @@ export default function Users() {
               >
                 <PencilLine size={18} />
               </button>
-              {/* <button
-                onClick={() => handleDeleteClick(user._id)}
+              <button
+                onClick={() => {
+                  setUserToDelete(user._id);
+                  setIsDeleteConfirmOpen(true);
+                }}
                 title="Delete User"
                 className="text-rose-400 hover:text-rose-600 transition-colors p-2 hover:bg-rose-50 rounded-xl cursor-pointer"
               >
                 <Trash2 size={18} />
-              </button> */}
+              </button>
             </div>
           </td>
         </tr>
@@ -208,6 +249,22 @@ export default function Users() {
             View, manage and update user information securely.
           </p>
         </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
+          >
+            <Plus size={20} />
+            Add New User
+          </button>
+          <button
+            onClick={() => setIsImportModalOpen(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
+          >
+            <Plus size={20} />
+            Add Multiple User
+          </button>
+        </div>
       </div>
 
       <div className="bg-white p-2 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
@@ -235,6 +292,7 @@ export default function Users() {
             setItemsPerPage(limit);
             setCurrentPage(1);
           }}
+          itemName="users"
         />
       </div>
 
@@ -250,6 +308,17 @@ export default function Users() {
         user={selectedUser}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
+      />
+
+      <AddUserModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
+
+      {/* Import Users Modal */}
+      <ImportUsersModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
       />
 
       {/* Delete Confirmation */}
@@ -272,7 +341,7 @@ export default function Users() {
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleConfirmDelete}
+              onClick={() => userToDelete && handleConfirmDelete(userToDelete)}
               className="rounded-xl bg-rose-500 hover:bg-rose-600 font-semibold h-11 border-none shadow-lg shadow-rose-100"
             >
               Yes, Delete User

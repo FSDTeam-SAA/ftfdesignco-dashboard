@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -28,21 +28,14 @@ import {
 } from "@/components/ui/select";
 import { useCategories } from "@/features/category/hooks/useCategory";
 import { Loader2 } from "lucide-react";
-import { User, UpdateUserData } from "../types";
-import { useEditUser } from "../hooks/useUsers";
+import { useAddUser } from "../hooks/useUsers";
 import { toast } from "sonner";
-import { isAxiosError } from "axios";
-import { useSession } from "next-auth/react";
 
-const editUserSchema = z.object({
+const addUserSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  // email: z.string().email("Invalid email address"),
-  // password: z
-  //   .string()
-  //   .min(6, "Password must be at least 6 characters")
-  //   .optional()
-  //   .or(z.literal("")),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   phoneNumber: z
     .string()
     .min(10, "Phone number must be at least 10 characters"),
@@ -50,54 +43,48 @@ const editUserSchema = z.object({
   city: z.string().min(2, "City is required"),
   region: z.string().min(2, "Region is required"),
   categoryName: z.string().min(1, "Job / Role is required"),
+  // companyName: z.string().min(2, "Company name is required"),
   location: z.string().min(2, "Location is required"),
   balance: z.coerce.number().min(0, "Balance must be at least 0"),
-  status: z.enum(["active", "inactive"]),
 });
 
-type EditUserFormValues = z.infer<typeof editUserSchema>;
+type AddUserFormValues = z.infer<typeof addUserSchema>;
 
-interface EditUserModalProps {
-  user: User | null;
+interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const EditUserModal: React.FC<EditUserModalProps> = ({
-  user,
-  isOpen,
-  onClose,
-}) => {
-  const { data: session, update: updateSession } = useSession();
+const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
   const { data: categoriesData, isLoading: isLoadingCategories } =
     useCategories();
   const categories = categoriesData?.data || [];
 
-  const { mutateAsync: updateUser, isPending: isUpdatingUser } = useEditUser();
+  const { mutateAsync: addUser, isPending: isAddingUser } =
+    useAddUser();
 
-  const form = useForm<EditUserFormValues>({
-    resolver: zodResolver(editUserSchema),
+  const form = useForm<AddUserFormValues>({
+    resolver: zodResolver(addUserSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
-      // email: "",
-      // password: "",
+      email: "",
+      password: "",
       phoneNumber: "",
       homeAddress: "",
       city: "",
       region: "",
       categoryName: "",
+      // companyName: "",
       location: "",
       balance: 0,
-      status: "active",
     },
   });
 
-  // REGIONAL OFFICE Name
+  // REGIONAL OFFICE Name 
   const regionalOffice = [
     "21 Industrial Blvd. New Castle, DE 19720",
     "6380 Flank Dr. #600 Harrisburg, PA 17112",
-    "141 Delta Dr. Suite D Pittsburgh, PA 15238",
     "141 Delta Dr. Suite D Pittsburgh, PA 15238",
     "1000 Prime Place. Hauppauge, NY 11788",
     "2 Cranberry Rd. #A5 Parsippany, NJ 07054",
@@ -106,60 +93,21 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
     "2551 Eltham Ave. Suite L Norfolk, VA 23513",
   ];
 
-  useEffect(() => {
-    if (user) {
-      form.reset({
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
-        // email: user.email || "",
-        // password: "",
-        phoneNumber: user.phoneNumber || "",
-        homeAddress: user.homeAddress || "",
-        city: user.city || "",
-        region: user.region || "",
-        categoryName: user.categoryName || "",
-        location: user.location || "",
-        balance: user.balance || 0,
-        status: user.status || "active",
-      });
+  // Add User Submit Handler
+  const onSubmit = (data: AddUserFormValues) => {
+    console.log("Adding New User with Category:", data);
+    addUser(data);
+    if (isAddingUser) {
+      toast.loading("Adding user...");
     }
-  }, [user, form]);
-
-  const onSubmit = async (values: EditUserFormValues) => {
-    if (!user) return;
-
-    // Create payload, remove password if empty
-    const payload: UpdateUserData = { ...values };
-    if (!payload.password) delete payload.password;
-
-    try {
-      const response = await updateUser({ id: user._id, data: payload });
-      if (response.success) {
-        toast.success(response.message || "User updated successfully");
-
-        // If the edited user is the current logged-in user, refresh the session
-        if (session?.user?.id === user._id) {
-          await updateSession({
-            user: {
-              ...session.user,
-              firstName: values.firstName,
-              lastName: values.lastName,
-              // email: values.email,
-            },
-          });
-        }
-
-        onClose();
-      } else {
-        toast.error(response.message || "Failed to update user");
-      }
-    } catch (error) {
-      let errorMessage = "Something went wrong";
-      if (isAxiosError(error)) {
-        errorMessage = error.response?.data?.message || errorMessage;
-      }
-      toast.error(errorMessage);
+    if (isAddingUser) {
+      toast.success("User added successfully");
     }
+    if (isAddingUser) {
+      toast.error("Failed to add user");
+    }
+    form.reset();
+    onClose();
   };
 
   return (
@@ -167,10 +115,10 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] border-none shadow-2xl rounded-3xl p-0 bg-white overflow-hidden flex flex-col">
         <DialogHeader className="p-8 pb-0">
           <DialogTitle className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            Edit User Profile
+            Add New User
           </DialogTitle>
           <p className="text-gray-500 font-medium mt-1">
-            Update the information for {user?.firstName} {user?.lastName}
+            Fill in the details to create a new user account.
           </p>
         </DialogHeader>
 
@@ -219,7 +167,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* <FormField
+                <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
@@ -238,14 +186,14 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                       <FormMessage />
                     </FormItem>
                   )}
-                /> */}
-                {/* <FormField
+                />
+                <FormField
                   control={form.control}
                   name="password"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 font-bold">
-                        Password (Leave blank to keep current)
+                        Password
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -258,7 +206,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                       <FormMessage />
                     </FormItem>
                   )}
-                /> */}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -291,7 +239,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value}
+                        defaultValue={field.value}
                         disabled={isLoadingCategories}
                       >
                         <FormControl>
@@ -394,6 +342,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
                 <FormField
                   control={form.control}
                   name="location"
@@ -405,50 +354,20 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                       <FormControl>
                         <Select
                           onValueChange={field.onChange}
-                          value={field.value}
+                          defaultValue={field.value}
                         >
                           <SelectTrigger className="rounded-xl border-gray-200 h-12 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
                             <SelectValue placeholder="Select Regional Office" />
                           </SelectTrigger>
                           <SelectContent className="cursor-pointer">
                             {regionalOffice.map((office) => (
-                              <SelectItem
-                                key={office}
-                                value={office}
-                                className="border border-gray-200 my-1 cursor-pointer"
-                              >
+                              <SelectItem key={office} value={office} className="border border-gray-200 my-1 cursor-pointer">
                                 {office}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-bold">
-                        Status
-                      </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="rounded-xl border-gray-200 h-12 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
-                            <SelectValue placeholder="Select Status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="rounded-xl border-gray-100">
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                        </SelectContent>
-                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -487,10 +406,9 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isUpdatingUser}
                   className="flex-1 h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-600 font-bold text-white shadow-lg shadow-emerald-200 transition-all hover:-translate-y-0.5 border-none"
                 >
-                  {isUpdatingUser ? "Updating..." : "Save Changes"}
+                  Add User
                 </Button>
               </div>
             </form>
@@ -501,4 +419,4 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
   );
 };
 
-export default EditUserModal;
+export default AddUserModal;

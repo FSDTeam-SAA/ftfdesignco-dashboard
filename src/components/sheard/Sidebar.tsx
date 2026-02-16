@@ -49,9 +49,14 @@ const navItems = [
     icon: Users,
   },
   {
-    title: "Category",
+    title: "Job/Role",
     href: "/dashboard/category",
     icon: ShoppingBasket,
+  },
+  {
+    title: "Inventory",
+    href: "/dashboard/inventory",
+    icon: CreditCard,
   },
   // {
   //   title: "Shipping Info",

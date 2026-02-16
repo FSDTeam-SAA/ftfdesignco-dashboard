@@ -1,15 +1,11 @@
 import axiosInstance from "@/instance/axios-instance";
-import {
-  CommonResponse,
-  ProductResponse,
-  UpdateProductData,
-  CreateProductData,
-} from "../types";
+import { CommonResponse, ProductResponse } from "../types";
 
 // Get All Products
 export const getProducts = async (
   page: number = 1,
   limit: number = 10,
+  // search: string = "",
 ): Promise<ProductResponse> => {
   const response = await axiosInstance.get("/product/all", {
     params: { page, limit },
@@ -20,9 +16,13 @@ export const getProducts = async (
 // edit product
 export const editProduct = async (
   id: string,
-  data: UpdateProductData,
+  data: FormData,
 ): Promise<CommonResponse> => {
-  const response = await axiosInstance.put(`/product/${id}`, data);
+  const response = await axiosInstance.put(`/product/${id}`, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 };
 
@@ -33,13 +33,28 @@ export const deleteProduct = async (id: string): Promise<CommonResponse> => {
 };
 
 // add product
-export const addProduct = async (
-  data: CreateProductData,
-): Promise<CommonResponse> => {
-  try {
-    const response = await axiosInstance.post("/product/create", data);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+export const addProduct = async (data: FormData): Promise<CommonResponse> => {
+  const response = await axiosInstance.post("/product/create", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
+// download products as CSV
+export const downloadProductsCSV = async (search: string = "") => {
+  const response = await axiosInstance.get("/product/export/csv", {
+    params: { search },
+    responseType: "blob",
+  });
+  return response.data;
+};
+
+// download products as PDF
+export const downloadProductsPDF = async (search: string = "") => {
+  const response = await axiosInstance.get("/product/export/pdf", {
+    params: { search },
+    responseType: "blob",
+  });
+  return response.data;
 };

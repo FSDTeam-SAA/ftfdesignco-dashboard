@@ -14,9 +14,10 @@ export interface Product {
   availableQuantity: number;
   status: "active" | "inactive";
   role?: string;
-  targetRoles?: string[];
+  rigion?: string;
+  region?: string;
   image?: string | ProductImage;
-  images?: string[]; // Used in some items in the JSON
+  images?: (string | ProductImage)[];
   createdAt: string | null;
   updatedAt: string | null;
 }
@@ -42,9 +43,10 @@ export interface CreateProductData {
   price: number;
   availableQuantity: number;
   status: "active" | "inactive";
+  role: string;
   sku?: string;
-  image?: string;
-  images?: string[];
+  image?: File | string;
+  images?: (File | string)[];
 }
 
 export interface PaginationMetadata {

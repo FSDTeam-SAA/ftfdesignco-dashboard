@@ -25,8 +25,22 @@ import {
 import { Product } from "../types";
 import { X, Upload, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useEditProduct } from "../hooks/useProducts";
+import { useCategories } from "../../category/hooks/useCategory";
 import { toast } from "sonner";
 import Image from "next/image";
+import { getProductMainImage } from "@/lib/utils";
+
+// REGIONAL OFFICE Name
+const regionalOffice = [
+  "21 Industrial Blvd. New Castle, DE 19720",
+  "6380 Flank Dr. #600 Harrisburg, PA 17112",
+  "141 Delta Dr. Suite D Pittsburgh, PA 15238",
+  "1000 Prime Place. Hauppauge, NY 11788",
+  "2 Cranberry Rd. #A5 Parsippany, NJ 07054",
+  "5061 Howerton Way. Suite L Bowie, MD 20715",
+  "10189 Maple Leaf Ct. Ashland, VA 23005",
+  "2551 Eltham Ave. Suite L Norfolk, VA 23513",
+];
 
 const productSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -37,7 +51,8 @@ const productSchema = z.object({
   price: z.coerce.number().min(0, "Price must be a positive number"),
   availableQuantity: z.coerce.number().min(0, "Stock must be at least 0"),
   status: z.enum(["active", "inactive"]),
-  images: z.array(z.string()).optional(),
+  role: z.string().min(1, "Category is required"),
+  region: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -52,9 +67,11 @@ export default function EditProductModal({
   product,
   isOpen,
   onClose,
-}: EditProductModalProps) {
+}: Readonly<EditProductModalProps>) {
   const [previews, setPreviews] = useState<string[]>([]);
-  const [newImages, setNewImages] = useState<File[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const { data: categoryData, isLoading: isCategoriesLoading } =
+    useCategories();
   const { mutate: editProduct, isPending } = useEditProduct();
 
   const {
@@ -81,26 +98,26 @@ export default function EditProductModal({
         price: product.price,
         availableQuantity: product.availableQuantity,
         status: product.status,
+        role: product.role || "",
+        region: product.region || "",
       });
 
       // Handle initial images
       const initialImages: string[] = [];
-      if (typeof product.image === "string") {
-        initialImages.push(product.image);
-      } else if (
-        product.image &&
-        typeof product.image !== "string" &&
-        product.image.url
-      ) {
-        initialImages.push(product.image.url);
-      }
-
       if (product.images && Array.isArray(product.images)) {
-        initialImages.push(...product.images);
+        product.images.forEach((img) => {
+          if (typeof img === "string") {
+            initialImages.push(img);
+          } else if (img && img.url) {
+            initialImages.push(img.url);
+          }
+        });
+      } else if (product.image) {
+        initialImages.push(getProductMainImage(product.image));
       }
 
       setPreviews(Array.from(new Set(initialImages)));
-      setNewImages([]);
+      setImageFiles([]);
     }
   }, [product, isOpen, reset]);
 
@@ -108,8 +125,7 @@ export default function EditProductModal({
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    setNewImages((prev) => [...prev, ...files]);
-
+    setImageFiles((prev) => [...prev, ...files]);
     const newPreviews = files.map((file) => URL.createObjectURL(file));
     setPreviews((prev) => [...prev, ...newPreviews]);
   };
@@ -118,44 +134,61 @@ export default function EditProductModal({
     setPreviews((prev) => {
       const updated = [...prev];
       const removed = updated.splice(index, 1)[0];
-
-      // If it was a dynamic URL, revoke it to prevent memory leaks
       if (removed.startsWith("blob:")) {
         URL.revokeObjectURL(removed);
-        // Also remove from newImages if it was one of those
-        // This is a simplification; in a real app you'd map previews to files accurately
       }
-
+      return updated;
+    });
+    setImageFiles((prev) => {
+      const updated = [...prev];
+      // Note: This logic assumes a 1:1 mapping between previews and imageFiles for new uploads
+      // In a more complex scenario with existing images, we'd need a more robust tracking
+      updated.splice(index, 1);
       return updated;
     });
   };
 
-  const onSubmit = (data: ProductFormValues) => {
+  const onSubmit = (values: ProductFormValues) => {
     if (!product) return;
 
-    // Construct final payload
-    // Note: In a real scenario, you might upload newImages to a storage service first
-    // Or send them as multipart data. Here we prepare the payload as requested.
-    const payload = {
-      ...data,
-      // For this demo, we'll send the previews (which includes existing URLs and blob URLs)
-      // In a real API integration, you'd handle the 'newImages' File objects accordingly
-      images: previews,
-      // Keep track of which original image was the main "image" field vs "images" array
-      image: previews[0] || "",
-    };
+    const formData = new FormData();
+    formData.append("title", values.title);
+    formData.append("type", values.type);
+    formData.append("description", values.description);
+    formData.append("size", values.size);
+    formData.append("availableQuantity", values.availableQuantity.toString());
+    formData.append("price", values.price.toString());
+    formData.append("status", values.status);
+    formData.append("role", values.role);
+    if (values.region) {
+      formData.append("rigion", values.region);
+    }
 
-    console.log("Edit Product Payload:", payload);
+    // Append new images
+    if (imageFiles.length > 0) {
+      imageFiles.forEach((file) => {
+        formData.append("image", file);
+      });
+    }
 
     editProduct(
-      { id: product._id, data: payload },
+      { id: product._id, data: formData },
       {
         onSuccess: () => {
           toast.success("Product updated successfully");
           onClose();
         },
-        onError: (error: Error) => {
-          toast.error(error.message || "Failed to update product");
+        onError: (error: unknown) => {
+          let errorMessage = "Failed to update product";
+          if (error && typeof error === "object" && "response" in error) {
+            const axiosError = error as {
+              response?: { data?: { message?: string } };
+            };
+            errorMessage = axiosError.response?.data?.message || errorMessage;
+          } else if (error instanceof Error) {
+            errorMessage = error.message;
+          }
+          toast.error(errorMessage);
         },
       },
     );
@@ -209,20 +242,43 @@ export default function EditProductModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="type" className="text-gray-700 font-semibold">
-                Category / Type *
+              <Label htmlFor="role" className="text-gray-700 font-semibold">
+                Job / Role *
               </Label>
-              <Input
-                id="type"
-                {...register("type")}
-                placeholder="e.g. Electronics, Clothing"
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
-                  errors.type ? "border-red-500" : ""
-                }`}
-              />
-              {errors.type && (
+              <Select
+                value={watch("role")}
+                onValueChange={(val) => {
+                  setValue("role", val);
+                  const selectedCategory = categoryData?.data.find(
+                    (c) => c._id === val,
+                  );
+                  if (selectedCategory) {
+                    setValue("type", selectedCategory.roleTitle);
+                  }
+                }}
+              >
+                <SelectTrigger
+                  className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                    errors.role ? "border-red-500" : ""
+                  }`}
+                >
+                  <SelectValue
+                    placeholder={
+                      isCategoriesLoading ? "Loading..." : "Select Category"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryData?.data.map((category) => (
+                    <SelectItem key={category._id} value={category._id}>
+                      {category.roleTitle}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.role && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors.type.message}
+                  {errors.role.message}
                 </p>
               )}
             </div>
@@ -304,6 +360,31 @@ export default function EditProductModal({
                 <SelectContent>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="region" className="text-gray-700 font-semibold">
+                Regional Office *
+              </Label>
+              <Select
+                value={watch("region")}
+                onValueChange={(val) => setValue("region", val)}
+              >
+                <SelectTrigger className="rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C]">
+                  <SelectValue placeholder="Select Regional Office" />
+                </SelectTrigger>
+                <SelectContent className="cursor-pointer">
+                  {regionalOffice.map((office) => (
+                    <SelectItem
+                      key={office}
+                      value={office}
+                      className="border border-gray-200 my-1 cursor-pointer"
+                    >
+                      {office}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
