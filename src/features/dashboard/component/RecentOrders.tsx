@@ -1,15 +1,40 @@
 "use client";
 import React, { useState } from "react";
-import { useRecentOrders } from "../hooks/useRecentOrders";
-import { Eye } from "lucide-react";
+import {
+  useRecentOrders,
+  useRecentOrdersSearch,
+} from "../hooks/useRecentOrders";
+import { Eye, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Order } from "../types/index";
 import OrderDetailsModal from "./OrderDetailsModal";
 
 export default function RecentOrders() {
-  const { data, isLoading, error } = useRecentOrders();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 5;
+
+  const {
+    data: recentOrdersData,
+    isLoading: isRecentLoading,
+    error: recentError,
+  } = useRecentOrders(currentPage, limit);
+  const {
+    data: searchData,
+    isLoading: isSearchLoading,
+    error: searchError,
+  } = useRecentOrdersSearch(searchTerm, currentPage, limit);
+
+  const isLoading = searchTerm ? isSearchLoading : isRecentLoading;
+  const error = searchTerm ? searchError : recentError;
+  const data = searchTerm ? searchData : recentOrdersData;
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
 
   const handleViewDetails = (order: Order) => {
     setSelectedOrder(order);
@@ -44,13 +69,31 @@ export default function RecentOrders() {
 
   return (
     <div className="mt-8 bg-white rounded-2xl p-8 border border-gray-100">
-      <div className="mb-8">
-        <h2 className="text-[#22AD5C] text-2xl font-semibold mb-1">
-          Recent Orders
-        </h2>
-        <p className="text-gray-400 text-lg">
-          Get the information of car dealers
-        </p>
+      <div className="flex justify-between ">
+        <div className="mb-8">
+          <h2 className="text-[#22AD5C] text-2xl font-semibold mb-1">
+            Recent Orders
+          </h2>
+          <p className="text-gray-400 text-lg">
+            Get the information of car dealers
+          </p>
+        </div>
+        <div className="relative">
+          {/* <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          </div>
+            <Search
+              className="h-5 w-5 text-gray-400"
+              aria-label="Search Icon"
+            /> */}
+          <input
+            type="text"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#22AD5C] focus:border-[#22AD5C] sm:text-sm transition-all"
+            placeholder="Search orders by name or email..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            aria-label="Search orders"
+          />
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -116,6 +159,50 @@ export default function RecentOrders() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="mt-8 flex items-center justify-between border-t border-gray-100 pt-6">
+        <div className="text-gray-500 text-sm">
+          Showing {orders.length > 0 ? (currentPage - 1) * limit + 1 : 0} to{" "}
+          {(currentPage - 1) * limit + orders.length}
+          {data?.total ? ` of ${data.total}` : ""} results
+        </div>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className={`p-2 rounded-lg border border-gray-200 transition-colors ${
+              currentPage === 1
+                ? "bg-gray-50 text-gray-300 cursor-not-allowed"
+                : "bg-white text-gray-600 hover:bg-gray-50 cursor-pointer"
+            }`}
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <div className="flex items-center space-x-1">
+            <span className="px-4 py-2 bg-[#22AD5C] text-white rounded-lg text-sm font-medium">
+              {currentPage}
+            </span>
+          </div>
+          <button
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+            disabled={
+              orders.length < limit ||
+              (data?.pagination?.totalPages &&
+                currentPage >= data.pagination.totalPages)
+            }
+            className={`p-2 rounded-lg border border-gray-200 transition-colors ${
+              orders.length < limit ||
+              (data?.pagination?.totalPages &&
+                currentPage >= data.pagination.totalPages)
+                ? "bg-gray-50 text-gray-300 cursor-not-allowed"
+                : "bg-white text-gray-600 hover:bg-gray-50 cursor-pointer"
+            }`}
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
       </div>
 
       <OrderDetailsModal

@@ -46,7 +46,7 @@ export default function Dashboard() {
 
   return (
     <div className="p-6">
-      <div className="border rounded-xl p-5 bg-white mb-8">
+      {/* <div className="border rounded-xl p-5 bg-white mb-8">
         <h2 className="text-lg font-semibold mb-4">
           Enquiries by Product Type
         </h2>
@@ -70,7 +70,7 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
 
       <RecentOrders />
     </div>
