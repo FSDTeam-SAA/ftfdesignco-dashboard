@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useRecentOrders } from "../hooks/useRecentOrders";
 import { useDebounce } from "@/hooks/useDebounce";
+import Pagination from "@/components/shared/Pagination";
 import { Eye, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Order } from "../types/index";
@@ -13,11 +14,11 @@ export default function RecentOrders() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { data, isLoading, error } = useRecentOrders(
     currentPage,
-    limit,
+    itemsPerPage,
     debouncedSearchTerm,
   );
 
@@ -56,6 +57,12 @@ export default function RecentOrders() {
   }
 
   const orders = data?.data || [];
+  const pagination = {
+    total: data?.meta?.total || 0,
+    page: data?.meta?.page || 1,
+    limit: data?.meta?.limit || itemsPerPage,
+    totalPages: data?.meta?.totalPage || 0,
+  };
 
   return (
     <div className="mt-8 bg-white rounded-2xl p-8 border border-gray-100">
@@ -64,9 +71,7 @@ export default function RecentOrders() {
           <h2 className="text-[#22AD5C] text-2xl font-semibold mb-1">
             Recent Orders
           </h2>
-          <p className="text-gray-400 text-lg">
-            Get the information of car dealers
-          </p>
+          <p className="text-gray-400 text-lg">Get the information of recent orders</p>
         </div>
         <div className="relative w-full sm:w-80">
           {/* <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -151,49 +156,16 @@ export default function RecentOrders() {
         </table>
       </div>
 
-      {/* Pagination Controls */}
-      <div className="mt-8 flex items-center justify-between border-t border-gray-100 pt-6">
-        <div className="text-gray-500 text-sm">
-          Showing {orders.length > 0 ? (currentPage - 1) * limit + 1 : 0} to{" "}
-          {(currentPage - 1) * limit + orders.length}
-          {data?.total ? ` of ${data.total}` : ""} results
-        </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className={`p-2 rounded-lg border border-gray-200 transition-colors ${
-              currentPage === 1
-                ? "bg-gray-50 text-gray-300 cursor-not-allowed"
-                : "bg-white text-gray-600 hover:bg-gray-50 cursor-pointer"
-            }`}
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <div className="flex items-center space-x-1">
-            <span className="px-4 py-2 bg-[#22AD5C] text-white rounded-lg text-sm font-medium">
-              {currentPage}
-            </span>
-          </div>
-          <button
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-            disabled={
-              orders.length < limit ||
-              (data?.pagination?.totalPages &&
-                currentPage >= data.pagination.totalPages)
-            }
-            className={`p-2 rounded-lg border border-gray-200 transition-colors ${
-              orders.length < limit ||
-              (data?.pagination?.totalPages &&
-                currentPage >= data.pagination.totalPages)
-                ? "bg-gray-50 text-gray-300 cursor-not-allowed"
-                : "bg-white text-gray-600 hover:bg-gray-50 cursor-pointer"
-            }`}
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
-      </div>
+      {/* Pagination Section */}
+      <Pagination
+        pagination={pagination}
+        onPageChange={setCurrentPage}
+        onLimitChange={(limit) => {
+          setItemsPerPage(limit);
+          setCurrentPage(1);
+        }}
+        itemName="orders"
+      />
 
       <OrderDetailsModal
         isOpen={isModalOpen}
