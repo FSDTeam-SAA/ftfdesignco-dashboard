@@ -44,7 +44,7 @@ const regionalOffice = [
 
 const productSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
-  sku: z.string().optional(),
+  // sku: z.string().optional(),
   description: z.string().min(10, "Description must be at least 10 characters"),
   type: z.string().min(1, "Product type is required"),
   size: z.string().min(1, "Size is required"),
@@ -91,7 +91,7 @@ export default function EditProductModal({
     if (product && isOpen) {
       reset({
         title: product.title,
-        sku: product.sku || "",
+        // sku: product.sku || "",
         description: product.description,
         type: product.type,
         size: product.size,
@@ -229,7 +229,7 @@ export default function EditProductModal({
               )}
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="sku" className="text-gray-700 font-semibold">
                 SKU
               </Label>
@@ -239,7 +239,7 @@ export default function EditProductModal({
                 placeholder="Enter SKU"
                 className="rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C]"
               />
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <Label htmlFor="role" className="text-gray-700 font-semibold">

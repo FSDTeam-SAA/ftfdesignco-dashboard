@@ -2,28 +2,57 @@
 import { useState } from "react";
 import { isAxiosError } from "axios";
 import { useDeleteProduct, useProducts } from "../hooks/useProducts";
-import { Product } from "../types";
+import { useDebounce } from "@/hooks/useDebounce";
+import { Product, ProductFilters } from "../types";
 import Pagination from "@/components/shared/Pagination";
 import AddProductModal from "./AddProductModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { downloadFile, getProductMainImage } from "@/lib/utils";
+import { getProductMainImage } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductDetailsModal from "./ProductDetailsModal";
 import EditProductModal from "./EditProductModal";
 import Image from "next/image";
 import { Plus, Eye, PencilLine, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useMemo } from "react";
+
+const parseSearchString = (input: string): ProductFilters => {
+  const parts = input.trim().split(/\s+/);
+  const searchTerms: string[] = [];
+  const numbers: number[] = [];
+
+  parts.forEach((part) => {
+    if (!isNaN(Number(part)) && part !== "") {
+      numbers.push(Number(part));
+    } else {
+      searchTerms.push(part);
+    }
+  });
+
+  return {
+    searchTerm: searchTerms.join(" "),
+    price: numbers[0],
+    availableQuantity: numbers[1],
+  };
+};
 
 export default function Products() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [search] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  const filters = useMemo(
+    () => parseSearchString(debouncedSearchQuery),
+    [debouncedSearchQuery],
+  );
 
   const { data, isLoading, error } = useProducts(
     currentPage,
     itemsPerPage,
-    search,
+    filters,
   );
   const rawProducts: Product[] = data?.data || [];
 
@@ -77,6 +106,12 @@ export default function Products() {
       }
       toast.error(errorMessage);
     }
+  };
+
+  // Handle search change and reset to first page
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
   };
 
   const renderTableBody = () => {
@@ -209,6 +244,14 @@ export default function Products() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+          <Input
+            type="text"
+            placeholder="Search title: Shirt, price: 28"
+            className="w-full sm:w-64 h-10"
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+          />
+
           <Button
             onClick={() => setIsAddModalOpen(true)}
             className="bg-[#D1FAE5] hover:bg-[#A7F3D0] text-[#065F46] font-semibold flex items-center gap-2 border-none shadow-sm w-full sm:w-auto h-10"

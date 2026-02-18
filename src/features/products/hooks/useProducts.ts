@@ -5,16 +5,17 @@ import {
   getProducts,
   addProduct,
 } from "../api/products";
+import { ProductFilters } from "../types";
 
 // Get All products
 export const useProducts = (
   page: number = 1,
   limit: number = 10,
-  search: string = "",
+  filters: ProductFilters = {},
 ) => {
   return useQuery({
-    queryKey: ["products", page, limit, search],
-    queryFn: () => getProducts(page, limit),
+    queryKey: ["products", page, limit, filters],
+    queryFn: () => getProducts(page, limit, filters),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
   });
