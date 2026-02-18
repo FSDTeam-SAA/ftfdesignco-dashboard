@@ -7,12 +7,21 @@ import { Eye, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Order } from "../types/index";
 import OrderDetailsModal from "./OrderDetailsModal";
+import { regionalOffice } from "@/features/Inventory/constants";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function RecentOrders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [region, setRegion] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -20,10 +29,16 @@ export default function RecentOrders() {
     currentPage,
     itemsPerPage,
     debouncedSearchTerm,
+    region,
   );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleRegionChange = (value: string) => {
+    setRegion(value === "all" ? "" : value);
     setCurrentPage(1);
   };
 
@@ -66,28 +81,56 @@ export default function RecentOrders() {
 
   return (
     <div className="mt-8 bg-white rounded-2xl p-8 border border-gray-100">
-      <div className="flex justify-between ">
-        <div className="mb-8">
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <div className="mb-4 sm:mb-8">
           <h2 className="text-[#22AD5C] text-2xl font-semibold mb-1">
             Recent Orders
           </h2>
-          <p className="text-gray-400 text-lg">Get the information of recent orders</p>
+          <p className="text-gray-400 text-lg">
+            Get the information of recent orders
+          </p>
         </div>
-        <div className="relative w-full sm:w-80">
-          {/* <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search
-              className="h-5 w-5 text-gray-400"
-              aria-label="Search Icon"
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          {/* Region Filter */}
+          <div className="w-full sm:w-64">
+            <Select onValueChange={handleRegionChange} value={region || "all"}>
+              <SelectTrigger className="w-full h-10 border-gray-200 rounded-xl focus:ring-[#22AD5C] focus:border-[#22AD5C] bg-white">
+                <SelectValue placeholder="Filter by Region" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-gray-200 shadow-lg rounded-xl">
+                <SelectItem
+                  value="all"
+                  className="focus:bg-green-50 focus:text-[#22AD5C]"
+                >
+                  All Regions
+                </SelectItem>
+                {regionalOffice.map((office) => (
+                  <SelectItem
+                    key={office}
+                    value={office}
+                    className="focus:bg-green-50 focus:text-[#22AD5C]"
+                  >
+                    {office}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Search Input */}
+          <div className="relative w-full sm:w-80">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#22AD5C] focus:border-[#22AD5C] sm:text-sm transition-all h-10"
+              placeholder="Search orders..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              aria-label="Search orders"
             />
-          </div> */}
-          <input
-            type="text"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#22AD5C] focus:border-[#22AD5C] sm:text-sm transition-all"
-            placeholder="Search orders by name or email..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            aria-label="Search orders"
-          />
+          </div>
         </div>
       </div>
 
