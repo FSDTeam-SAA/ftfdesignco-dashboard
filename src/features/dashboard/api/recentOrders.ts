@@ -21,3 +21,9 @@ export const getRecentOrders = async (
   });
   return response.data;
 };
+
+//  Delete Order
+export const deleteOrder = async (id: string) => {
+  const response = await axiosInstance.delete(`/order/${id}`);
+  return response.data;
+};

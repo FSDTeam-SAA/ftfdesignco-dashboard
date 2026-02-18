@@ -1,9 +1,11 @@
 "use client";
 import React, { useState } from "react";
-import { useRecentOrders } from "../hooks/useRecentOrders";
+import { useDeleteOrder, useRecentOrders } from "../hooks/useRecentOrders";
 import { useDebounce } from "@/hooks/useDebounce";
 import Pagination from "@/components/shared/Pagination";
-import { Eye, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Eye, Search, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Order } from "../types/index";
 import OrderDetailsModal from "./OrderDetailsModal";
@@ -15,6 +17,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function RecentOrders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -24,6 +36,10 @@ export default function RecentOrders() {
   const [region, setRegion] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const deleteOrderMutation = useDeleteOrder();
 
   const { data, isLoading, error } = useRecentOrders(
     currentPage,
@@ -45,6 +61,26 @@ export default function RecentOrders() {
   const handleViewDetails = (order: Order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setOrderToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!orderToDelete) return;
+
+    try {
+      await deleteOrderMutation.mutateAsync(orderToDelete);
+      queryClient.invalidateQueries({ queryKey: ["recent-orders"] });
+      toast.success("Order deleted successfully");
+      setIsDeleteDialogOpen(false);
+      setOrderToDelete(null);
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Failed to delete order");
+    }
   };
 
   if (isLoading) {
@@ -119,9 +155,6 @@ export default function RecentOrders() {
 
           {/* Search Input */}
           <div className="relative w-full sm:w-80">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
             <input
               type="text"
               className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#22AD5C] focus:border-[#22AD5C] sm:text-sm transition-all h-10"
@@ -185,12 +218,22 @@ export default function RecentOrders() {
                     {order.user?.email || "N/A"}
                   </td>
                   <td className="py-4 px-4 text-center rounded-r-lg">
-                    <button
-                      onClick={() => handleViewDetails(order)}
-                      className="text-[#22AD5C] hover:bg-green-50 p-2 rounded-full transition-colors inline-flex items-center justify-center cursor-pointer"
-                    >
-                      <Eye size={24} />
-                    </button>
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => handleViewDetails(order)}
+                        className="text-[#22AD5C] hover:bg-green-50 p-2 rounded-full transition-colors inline-flex items-center justify-center cursor-pointer"
+                        title="View Details"
+                      >
+                        <Eye size={24} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(order._id)}
+                        className="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors inline-flex items-center justify-center cursor-pointer"
+                        title="Delete Order"
+                      >
+                        <Trash2 size={24} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -203,7 +246,7 @@ export default function RecentOrders() {
       <Pagination
         pagination={pagination}
         onPageChange={setCurrentPage}
-        onLimitChange={(limit) => {
+        onLimitChange={(limit: number) => {
           setItemsPerPage(limit);
           setCurrentPage(1);
         }}
@@ -215,6 +258,35 @@ export default function RecentOrders() {
         order={selectedOrder}
         onClose={() => setIsModalOpen(false)}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent className="bg-white border border-gray-100 rounded-2xl shadow-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-semibold text-gray-900">
+              Are you sure?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-500 text-md mt-2">
+              This action cannot be undone. This will permanently delete the
+              order from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 flex gap-3">
+            <AlertDialogCancel className="px-6 py-2 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="px-6 py-2 bg-red-500 text-white hover:bg-red-600 rounded-xl border-none"
+            >
+              {deleteOrderMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

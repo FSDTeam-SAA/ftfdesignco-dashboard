@@ -1,6 +1,6 @@
 // src/features/dashboard/hooks/useRecentOrders.ts
-import { useQuery } from "@tanstack/react-query";
-import { getRecentOrders } from "../api/recentOrders";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { deleteOrder, getRecentOrders } from "../api/recentOrders";
 
 // Get Recent Orders hook with optional search
 export const useRecentOrders = (
@@ -14,5 +14,13 @@ export const useRecentOrders = (
     queryFn: () => getRecentOrders(page, limit, searchTerm, region),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
+  });
+};
+
+
+//  Delete Order hook
+export const useDeleteOrder = () => {
+  return useMutation({
+    mutationFn: (id: string) => deleteOrder(id),
   });
 };
