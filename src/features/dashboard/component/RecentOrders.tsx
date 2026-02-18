@@ -1,9 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import {
-  useRecentOrders,
-  useRecentOrdersSearch,
-} from "../hooks/useRecentOrders";
+import { useRecentOrders } from "../hooks/useRecentOrders";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Eye, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Order } from "../types/index";
@@ -13,23 +11,15 @@ export default function RecentOrders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 5;
 
-  const {
-    data: recentOrdersData,
-    isLoading: isRecentLoading,
-    error: recentError,
-  } = useRecentOrders(currentPage, limit);
-  const {
-    data: searchData,
-    isLoading: isSearchLoading,
-    error: searchError,
-  } = useRecentOrdersSearch(searchTerm, currentPage, limit);
-
-  const isLoading = searchTerm ? isSearchLoading : isRecentLoading;
-  const error = searchTerm ? searchError : recentError;
-  const data = searchTerm ? searchData : recentOrdersData;
+  const { data, isLoading, error } = useRecentOrders(
+    currentPage,
+    limit,
+    debouncedSearchTerm,
+  );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -78,13 +68,13 @@ export default function RecentOrders() {
             Get the information of car dealers
           </p>
         </div>
-        <div className="relative">
+        <div className="relative w-full sm:w-80">
           {/* <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          </div>
             <Search
               className="h-5 w-5 text-gray-400"
               aria-label="Search Icon"
-            /> */}
+            />
+          </div> */}
           <input
             type="text"
             className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#22AD5C] focus:border-[#22AD5C] sm:text-sm transition-all"
