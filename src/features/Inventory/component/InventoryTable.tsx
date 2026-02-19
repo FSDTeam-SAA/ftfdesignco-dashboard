@@ -6,17 +6,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { getProductMainImage } from "@/lib/utils";
 import Image from "next/image";
-import { Pencil } from "lucide-react";
+import { Pencil, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
 import EditInventoryModal from "./EditInventoryModal";
 
 interface InventoryTableProps {
   items: InventoryItem[];
   isLoading: boolean;
+  sortField: "available" | "onHand" | null;
+  sortDirection: "asc" | "desc";
+  onSort: (field: "available" | "onHand") => void;
 }
 
 export default function InventoryTable({
   items,
   isLoading,
+  sortField,
+  sortDirection,
+  onSort,
 }: Readonly<InventoryTableProps>) {
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -24,6 +30,25 @@ export default function InventoryTable({
   const handleEdit = (item: InventoryItem) => {
     setSelectedItem(item);
     setIsEditModalOpen(true);
+  };
+
+  const getSortIcon = (field: "available" | "onHand") => {
+    const isActive = sortField === field;
+    if (!isActive)
+      return <ArrowUpDown size={14} className="ml-1 text-gray-300" />;
+
+    return (
+      <div className="flex items-center ml-1 px-2 py-0.5 bg-green-50 rounded-full border border-emerald-100 text-[#22AD5C] shadow-sm animate-in fade-in zoom-in duration-200">
+        {sortDirection === "asc" ? (
+          <ChevronUp size={12} className="mr-0.5" />
+        ) : (
+          <ChevronDown size={12} className="mr-0.5" />
+        )}
+        <span className="text-[9px] font-bold tracking-tight uppercase">
+          {sortDirection === "asc" ? "Low–High" : "High–Low"}
+        </span>
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -52,8 +77,22 @@ export default function InventoryTable({
                 <th className="px-6 py-2">Order Id</th>
                 <th className="px-6 py-2 text-center">SKU</th>
                 <th className="px-6 py-2 text-center">Publish Date</th>
-                <th className="px-6 py-2 text-center">Available</th>
-                <th className="px-6 py-2 text-center">On Hand</th>
+                <th
+                  className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors"
+                  onClick={() => onSort("available")}
+                >
+                  <div className="flex items-center justify-center">
+                    Available {getSortIcon("available")}
+                  </div>
+                </th>
+                <th
+                  className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors"
+                  onClick={() => onSort("onHand")}
+                >
+                  <div className="flex items-center justify-center">
+                    On Hand {getSortIcon("onHand")}
+                  </div>
+                </th>
                 <th className="px-6 py-2 text-center">Action</th>
               </tr>
             </thead>
