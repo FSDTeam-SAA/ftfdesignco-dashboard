@@ -1,15 +1,19 @@
 import axiosInstance from "@/instance/axios-instance";
-import { CommonResponse, ProductResponse } from "../types";
+import { CommonResponse, ProductFilters, ProductResponse } from "../types";
 
 // Get All Products
 export const getProducts = async (
   page: number = 1,
   limit: number = 10,
-  // search: string = "",
+  filters: ProductFilters = {},
 ): Promise<ProductResponse> => {
-  const response = await axiosInstance.get("/product/all", {
-    params: { page, limit },
-  });
+  const { searchTerm, ...rest } = filters;
+  const response = await axiosInstance.get(
+    `/product/all?searchTerm=${searchTerm || ""}`,
+    {
+      params: { page, limit, ...rest },
+    },
+  );
   return response.data;
 };
 
@@ -41,20 +45,11 @@ export const addProduct = async (data: FormData): Promise<CommonResponse> => {
   });
   return response.data;
 };
-// download products as CSV
-export const downloadProductsCSV = async (search: string = "") => {
-  const response = await axiosInstance.get("/product/export/csv", {
-    params: { search },
-    responseType: "blob",
-  });
-  return response.data;
-};
 
-// download products as PDF
-export const downloadProductsPDF = async (search: string = "") => {
-  const response = await axiosInstance.get("/product/export/pdf", {
-    params: { search },
-    responseType: "blob",
-  });
-  return response.data;
-};
+// search product
+// export const searchProduct = async (search: string): Promise<ProductResponse> => {
+//   const response = await axiosInstance.get("/product/search", {
+//     params: { search },
+//   });
+//   return response.data;
+// };

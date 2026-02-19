@@ -30,7 +30,6 @@ import Image from "next/image";
 
 const productSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
-  sku: z.string().optional(),
   description: z.string().min(10, "Description must be at least 10 characters"),
   type: z.string().min(1, "Product type is required"),
   size: z.string().min(1, "Size is required"),
@@ -88,8 +87,6 @@ export default function AddProductModal({
     },
   });
 
-  // const currentStatus = watch("status");
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -129,12 +126,7 @@ export default function AddProductModal({
     if (values.region) {
       formData.append("rigion", values.region);
     }
-    if (values.sku) {
-      formData.append("sku", values.sku);
-    }
-    // if (values.targetRoles) {
-    //   formData.append("targetRoles", values.targetRoles);
-    // }
+ 
 
     // Append image(s) - The Postman shows 'image' as a File
     if (imageFiles.length > 0) {
@@ -202,18 +194,7 @@ export default function AddProductModal({
                 </p>
               )}
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="sku" className="text-gray-700 font-semibold">
-                SKU
-              </Label>
-              <Input
-                id="sku"
-                {...register("sku")}
-                placeholder="Enter SKU (optional)"
-                className="rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C]"
-              />
-            </div>
+ 
 
             <div className="space-y-2">
               <Label htmlFor="role" className="text-gray-700 font-semibold">
