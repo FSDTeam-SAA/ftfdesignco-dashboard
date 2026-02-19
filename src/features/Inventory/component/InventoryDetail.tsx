@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useInventory } from "../hooks/useInventory";
 import InventoryHeader from "./InventoryHeader";
@@ -17,10 +17,41 @@ export default function InventoryDetail() {
   const [search, setSearch] = useState("");
   const router = useRouter();
 
+  // Sorting State
+  const [sortField, setSortField] = useState<"available" | "onHand" | null>(
+    null,
+  );
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
   const { data, isLoading, error } = useInventory(regionName);
   const inventoryResponse = data as InventoryResponse;
 
-  const items = inventoryResponse?.data || [];
+  const items = useMemo(
+    () => inventoryResponse?.data || [],
+    [inventoryResponse],
+  );
+
+  const sortedItems = useMemo(() => {
+    if (!sortField) return items;
+
+    return [...items].sort((a, b) => {
+      const valA = a.availableQuantity;
+      const valB = b.availableQuantity;
+
+      if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+      if (valA > valB) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [items, sortField, sortDirection]);
+
+  const handleSort = (field: "available" | "onHand") => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
 
   const handleDownloadCSV = async () => {
     try {
@@ -93,7 +124,13 @@ export default function InventoryDetail() {
         onDownloadPDF={handleDownloadPDF}
       />
 
-      <InventoryTable items={items} isLoading={isLoading} />
+      <InventoryTable
+        items={sortedItems}
+        isLoading={isLoading}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        onSort={handleSort}
+      />
 
       {!isLoading && items.length === 0 && (
         <div className="bg-white p-20 rounded-4xl border border-gray-100 shadow-sm text-center">

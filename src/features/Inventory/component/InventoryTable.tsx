@@ -34,18 +34,29 @@ export default function InventoryTable({
 
   const getSortIcon = (field: "available" | "onHand") => {
     const isActive = sortField === field;
-    if (!isActive)
-      return <ArrowUpDown size={14} className="ml-1 text-gray-300" />;
+    const sortLabel = isActive
+      ? sortDirection === "asc"
+        ? "Low to High"
+        : "High to Low"
+      : "Low to High";
+
+    const Icon = isActive
+      ? sortDirection === "asc"
+        ? ChevronUp
+        : ChevronDown
+      : ArrowUpDown;
 
     return (
-      <div className="flex items-center ml-1 px-2 py-0.5 bg-green-50 rounded-full border border-emerald-100 text-[#22AD5C] shadow-sm animate-in fade-in zoom-in duration-200">
-        {sortDirection === "asc" ? (
-          <ChevronUp size={12} className="mr-0.5" />
-        ) : (
-          <ChevronDown size={12} className="mr-0.5" />
-        )}
-        <span className="text-[9px] font-bold tracking-tight uppercase">
-          {sortDirection === "asc" ? "Low–High" : "High–Low"}
+      <div
+        className={`flex items-center ml-2 px-2 py-1 rounded-full border transition-all duration-200 ${
+          isActive
+            ? "bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm"
+            : "bg-gray-50 border-gray-100 text-gray-400 group-hover:border-emerald-100 group-hover:text-emerald-500"
+        }`}
+      >
+        <Icon size={12} className="mr-1" />
+        <span className="text-[10px] font-bold whitespace-nowrap">
+          {sortLabel}
         </span>
       </div>
     );
@@ -53,14 +64,30 @@ export default function InventoryTable({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-4xl border border-gray-100 shadow-sm overflow-hidden p-6">
-        <div className="space-y-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton
-              key={`inventory-skeleton-${i}`}
-              className="h-20 w-full rounded-2xl"
-            />
-          ))}
+      <div className="bg-white p-2 md:p-6 rounded-4xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full border-separate border-spacing-y-4 min-w-[900px]">
+            <thead>
+              <tr className="text-left text-gray-400 font-bold text-xs uppercase tracking-wider">
+                <th className="px-6 py-2 w-20"></th>
+                <th className="px-6 py-2">Order Id</th>
+                <th className="px-6 py-2 text-center">SKU</th>
+                <th className="px-6 py-2 text-center">Publish Date</th>
+                <th className="px-6 py-2 text-center">Available</th>
+                <th className="px-6 py-2 text-center">On Hand</th>
+                <th className="px-6 py-2 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody className="space-y-4 pt-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <tr key={`skeleton-${i}`} className="bg-white">
+                  <td colSpan={7} className="px-6 py-4">
+                    <Skeleton className="h-16 w-full rounded-2xl" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     );
@@ -78,7 +105,7 @@ export default function InventoryTable({
                 <th className="px-6 py-2 text-center">SKU</th>
                 <th className="px-6 py-2 text-center">Publish Date</th>
                 <th
-                  className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors"
+                  className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors group"
                   onClick={() => onSort("available")}
                 >
                   <div className="flex items-center justify-center">
@@ -86,7 +113,7 @@ export default function InventoryTable({
                   </div>
                 </th>
                 <th
-                  className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors"
+                  className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors group"
                   onClick={() => onSort("onHand")}
                 >
                   <div className="flex items-center justify-center">
@@ -129,7 +156,7 @@ export default function InventoryTable({
                     {item._id.slice(-8).toUpperCase()}
                   </td>
                   <td className="px-6 py-4 text-center text-gray-500 font-medium border-y">
-                    No SKU
+                    #{item._id.slice(-4).toUpperCase()}
                   </td>
                   <td className="px-6 py-2 text-center text-gray-500 font-medium border-y">
                     {format(new Date(item.createdAt), "MM-dd-yyyy")}
