@@ -5,6 +5,7 @@ import {
   deleteUser,
   editUser,
   getUsers,
+  updateUserBalance,
 } from "../api/users";
 import { AddUserData, UpdateUserData } from "../types";
 
@@ -60,6 +61,18 @@ export const useAddMultipleUsers = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: FormData) => addMultipleUsers(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+};
+
+
+// update user balance
+export const useUpdateUserBalance = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { balance: number }) => updateUserBalance(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
