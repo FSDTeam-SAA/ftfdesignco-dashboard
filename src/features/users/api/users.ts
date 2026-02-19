@@ -70,3 +70,12 @@ export const downloadUsersPDF = async (search: string = "") => {
   });
   return response.data;
 };
+
+
+// user update balance
+export const updateUserBalance = async (
+  data: { balance: number },
+): Promise<CommonUserResponse> => {
+  const response = await axiosInstance.put(`/user/update-balance`, data);
+  return response.data;
+};

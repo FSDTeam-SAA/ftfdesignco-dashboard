@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AddUserModal from "./AddUserModal";
 import ImportUsersModal from "./ImportUsersModal";
+import BalanceResetModal from "./BalanceResetModal";
 
 import {
   AlertDialog,
@@ -57,6 +58,7 @@ export default function Users() {
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isBalanceResetModalOpen, setIsBalanceResetModalOpen] = useState(false);
 
   const handleViewUser = (user: User) => {
     setSelectedUser(user);
@@ -308,6 +310,12 @@ export default function Users() {
             <Plus size={20} />
             Add Multiple User
           </button>
+          <button
+            onClick={() => setIsBalanceResetModalOpen(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
+          >
+            Balance Reset
+          </button>
         </div>
       </div>
 
@@ -391,6 +399,12 @@ export default function Users() {
       <ImportUsersModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
+      />
+
+      {/* Balance Reset Modal */}
+      <BalanceResetModal
+        isOpen={isBalanceResetModalOpen}
+        onClose={() => setIsBalanceResetModalOpen(false)}
       />
 
       {/* Delete Confirmation */}
