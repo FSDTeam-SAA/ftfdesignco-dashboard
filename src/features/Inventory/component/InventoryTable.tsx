@@ -49,7 +49,7 @@ export default function InventoryTable({
             <thead>
               <tr className="text-left text-gray-400 font-bold text-xs uppercase tracking-wider">
                 <th className="px-6 py-2 w-20"></th>
-                <th className="px-6 py-2">Oder Id</th>
+                <th className="px-6 py-2">Order Id</th>
                 <th className="px-6 py-2 text-center">SKU</th>
                 <th className="px-6 py-2 text-center">Publish Date</th>
                 <th className="px-6 py-2 text-center">Available</th>
