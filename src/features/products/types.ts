@@ -65,6 +65,7 @@ export interface ProductFilters {
   searchTerm?: string;
   price?: number;
   availableQuantity?: number;
+  roleTitle?: string;
 }
 
 export interface CommonResponse {

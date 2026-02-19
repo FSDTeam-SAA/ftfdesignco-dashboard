@@ -37,7 +37,7 @@ import { useSession } from "next-auth/react";
 const editUserSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  // email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address"),
   // password: z
   //   .string()
   //   .min(6, "Password must be at least 6 characters")
@@ -80,7 +80,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
     defaultValues: {
       firstName: "",
       lastName: "",
-      // email: "",
+      email: "",
       // password: "",
       phoneNumber: "",
       homeAddress: "",
@@ -111,7 +111,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
       form.reset({
         firstName: user.firstName || "",
         lastName: user.lastName || "",
-        // email: user.email || "",
+        email: user.email || "",
         // password: "",
         phoneNumber: user.phoneNumber || "",
         homeAddress: user.homeAddress || "",
@@ -144,7 +144,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
               ...session.user,
               firstName: values.firstName,
               lastName: values.lastName,
-              // email: values.email,
+              email: values.email,
             },
           });
         }
@@ -219,7 +219,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* <FormField
+                <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
@@ -238,7 +238,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                       <FormMessage />
                     </FormItem>
                   )}
-                /> */}
+                />
                 {/* <FormField
                   control={form.control}
                   name="password"
