@@ -17,6 +17,14 @@ import Image from "next/image";
 import { Plus, Eye, PencilLine, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useMemo } from "react";
+import { useCategories } from "@/features/category/hooks/useCategory";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const parseSearchString = (input: string): ProductFilters => {
   const parts = input.trim().split(/\s+/);
@@ -43,11 +51,18 @@ export default function Products() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const [selectedRole, setSelectedRole] = useState<string>("");
 
-  const filters = useMemo(
-    () => parseSearchString(debouncedSearchQuery),
-    [debouncedSearchQuery],
-  );
+  const { data: categoriesData } = useCategories();
+  const categories = categoriesData?.data || [];
+
+  const filters = useMemo(() => {
+    const baseFilters = parseSearchString(debouncedSearchQuery);
+    return {
+      ...baseFilters,
+      roleTitle: selectedRole || undefined,
+    };
+  }, [debouncedSearchQuery, selectedRole]);
 
   const { data, isLoading, error } = useProducts(
     currentPage,
@@ -111,6 +126,11 @@ export default function Products() {
   // Handle search change and reset to first page
   const handleSearchChange = (val: string) => {
     setSearchQuery(val);
+    setCurrentPage(1);
+  };
+
+  const handleRoleChange = (role: string) => {
+    setSelectedRole(role === "all" ? "" : role);
     setCurrentPage(1);
   };
 
@@ -251,6 +271,32 @@ export default function Products() {
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
           />
+
+          <Select
+            onValueChange={handleRoleChange}
+            value={selectedRole || "all"}
+          >
+            <SelectTrigger className="w-full sm:w-48 h-10 border-gray-200 rounded-lg focus:ring-emerald-500">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-gray-100 shadow-xl rounded-xl">
+              <SelectItem
+                value="all"
+                className="focus:bg-emerald-50 focus:text-emerald-600 rounded-lg"
+              >
+                All Categories
+              </SelectItem>
+              {categories.map((cat) => (
+                <SelectItem
+                  key={cat._id}
+                  value={cat.roleTitle}
+                  className="focus:bg-emerald-50 focus:text-emerald-600 rounded-lg"
+                >
+                  {cat.roleTitle}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <Button
             onClick={() => setIsAddModalOpen(true)}
