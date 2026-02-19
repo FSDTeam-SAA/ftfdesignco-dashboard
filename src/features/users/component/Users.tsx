@@ -1,11 +1,19 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { isAxiosError } from "axios";
 import { useDeleteUser, useUsers } from "../hooks/useUsers";
 import { User } from "../types";
 import Pagination from "@/components/shared/Pagination";
 import { Badge } from "@/components/ui/badge";
-import { Eye, PencilLine, Plus, Trash2, FileDown } from "lucide-react";
+import {
+  Eye,
+  PencilLine,
+  Plus,
+  Trash2,
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import UserDetailsModal from "./UserDetailsModal";
 import EditUserModal from "./EditUserModal";
@@ -13,8 +21,6 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AddUserModal from "./AddUserModal";
 import ImportUsersModal from "./ImportUsersModal";
-import { downloadFile } from "@/lib/utils";
-import { downloadUsersCSV, downloadUsersPDF } from "../api/users";
 
 import {
   AlertDialog,
@@ -30,32 +36,18 @@ import {
 export default function Users() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [search, setSearch] = useState("");
+
+  // Sorting State
+  const [sortField, setSortField] = useState<
+    "firstName" | "lastName" | "email" | "role" | null
+  >(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const { data, isLoading, error } = useUsers(
     currentPage,
     itemsPerPage,
     // search,
   );
-  const rawUsers: User[] = data?.data || [];
-
-  // If the API doesn't provide pagination metadata, we assume it returned all users
-  // and handle pagination client-side.
-  const pagination = data?.pagination || {
-    total: rawUsers.length,
-    page: currentPage,
-    limit: itemsPerPage,
-    totalPages: Math.ceil(rawUsers.length / itemsPerPage) || 1,
-  };
-
-  // If we're doing client-side pagination (no metadata from API), slice the array.
-  const users = data?.pagination
-    ? rawUsers
-    : rawUsers.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage,
-      );
-
   const { mutateAsync: deleteUser } = useDeleteUser();
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -74,28 +66,6 @@ export default function Users() {
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setIsEditModalOpen(true);
-  };
-
-  const handleDownloadCSV = async () => {
-    try {
-      const blob = await downloadUsersCSV(search);
-      downloadFile(blob, "users_list.csv");
-      toast.success("Users CSV downloaded successfully");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to download CSV");
-    }
-  };
-
-  const handleDownloadPDF = async () => {
-    try {
-      const blob = await downloadUsersPDF(search);
-      downloadFile(blob, "users_list.pdf");
-      toast.success("Users PDF downloaded successfully");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to download PDF");
-    }
   };
 
   const handleConfirmDelete = async (id: string) => {
@@ -118,9 +88,83 @@ export default function Users() {
     }
   };
 
+  const handleSort = (field: "firstName" | "lastName" | "email" | "role") => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  const sortedUsers = useMemo(() => {
+    const usersToSort = data?.data || [];
+    if (!sortField) return usersToSort;
+
+    return [...usersToSort].sort((a, b) => {
+      let valA: string = "";
+      let valB: string = "";
+
+      if (sortField === "firstName") {
+        valA = a.firstName.toLowerCase();
+        valB = b.firstName.toLowerCase();
+      } else if (sortField === "lastName") {
+        valA = a.lastName.toLowerCase();
+        valB = b.lastName.toLowerCase();
+      } else if (sortField === "email") {
+        valA = a.email.toLowerCase();
+        valB = b.email.toLowerCase();
+      } else if (sortField === "role") {
+        valA = (a.role || "").toLowerCase();
+        valB = (b.role || "").toLowerCase();
+      }
+
+      if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+      if (valA > valB) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [data?.data, sortField, sortDirection]);
+
+  const getSortIcon = (field: "firstName" | "lastName" | "email" | "role") => {
+    const isActive = sortField === field;
+    if (!isActive)
+      return <ArrowUpDown size={16} className="ml-1 text-gray-300" />;
+
+    return (
+      <div className="flex items-center ml-1 px-2 py-1 bg-green-50 rounded-full border border-emerald-100 text-[#22AD5C] shadow-sm animate-in fade-in zoom-in duration-200">
+        {sortDirection === "asc" ? (
+          <ChevronUp size={14} className="mr-1" />
+        ) : (
+          <ChevronDown size={14} className="mr-1" />
+        )}
+        <span className="text-[10px] font-bold tracking-tight uppercase">
+          {sortDirection === "asc" ? "A–Z" : "Z–A"}
+        </span>
+      </div>
+    );
+  };
+
+  // If the API doesn't provide pagination metadata, we assume it returned all users
+  // and handle pagination client-side.
+  const pagination = data?.pagination || {
+    total: sortedUsers.length,
+    page: currentPage,
+    limit: itemsPerPage,
+    totalPages: Math.ceil(sortedUsers.length / itemsPerPage) || 1,
+  };
+
+  // If we're doing client-side pagination (no metadata from API), slice the array.
+  const users = data?.pagination
+    ? sortedUsers
+    : sortedUsers.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage,
+      );
+
   const renderTableBody = () => {
     if (isLoading) {
-      return [...new Array(5)].map((_, i) => (
+      return Array.from({ length: 5 }).map((_, i) => (
         <tr key={`skeleton-${i}`} className="bg-white">
           <td colSpan={5} className="px-6 py-4">
             <Skeleton className="h-16 w-full rounded-xl" />
@@ -142,7 +186,7 @@ export default function Users() {
       );
     }
 
-    return users.map((user) => {
+    return (users as User[]).map((user) => {
       const roleColor =
         user.role === "owner"
           ? "text-purple-600 bg-purple-50"
@@ -273,10 +317,38 @@ export default function Users() {
           <table className="w-full border-separate border-spacing-y-4 min-w-[900px]">
             <thead>
               <tr className="text-left text-gray-400 font-bold text-xs uppercase tracking-wider">
-                <th className="px-6 py-2">First Name</th>
-                <th className="px-6 py-2">Last Name</th>
-                <th className="px-6 py-2">Email Address</th>
-                <th className="px-6 py-2">Role</th>
+                <th
+                  className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors"
+                  onClick={() => handleSort("firstName")}
+                >
+                  <div className="flex items-center">
+                    First Name {getSortIcon("firstName")}
+                  </div>
+                </th>
+                <th
+                  className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors"
+                  onClick={() => handleSort("lastName")}
+                >
+                  <div className="flex items-center">
+                    Last Name {getSortIcon("lastName")}
+                  </div>
+                </th>
+                <th
+                  className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors"
+                  onClick={() => handleSort("email")}
+                >
+                  <div className="flex items-center">
+                    Email Address {getSortIcon("email")}
+                  </div>
+                </th>
+                <th
+                  className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors"
+                  onClick={() => handleSort("role")}
+                >
+                  <div className="flex items-center">
+                    Role {getSortIcon("role")}
+                  </div>
+                </th>
                 <th className="px-6 py-2 text-center">Actions</th>
               </tr>
             </thead>

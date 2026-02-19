@@ -14,7 +14,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ProductDetailsModal from "./ProductDetailsModal";
 import EditProductModal from "./EditProductModal";
 import Image from "next/image";
-import { Plus, Eye, PencilLine, Trash2 } from "lucide-react";
+import {
+  Plus,
+  Eye,
+  PencilLine,
+  Trash2,
+  ChevronUp,
+  ChevronDown,
+  ArrowUpDown,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useMemo } from "react";
 import { useCategories } from "@/features/category/hooks/useCategory";
@@ -53,6 +61,12 @@ export default function Products() {
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [selectedRole, setSelectedRole] = useState<string>("");
 
+  // Sorting State
+  const [sortField, setSortField] = useState<"name" | "price" | "stock" | null>(
+    null,
+  );
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
   const { data: categoriesData } = useCategories();
   const categories = categoriesData?.data || [];
 
@@ -69,21 +83,77 @@ export default function Products() {
     itemsPerPage,
     filters,
   );
-  const rawProducts: Product[] = data?.data || [];
+  const handleSort = (field: "name" | "price" | "stock") => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  const sortedProducts = useMemo(() => {
+    const productsToSort = data?.data || [];
+    if (!sortField) return productsToSort;
+
+    return [...productsToSort].sort((a, b) => {
+      let valA: string | number = "";
+      let valB: string | number = "";
+
+      if (sortField === "name") {
+        valA = a.title.toLowerCase();
+        valB = b.title.toLowerCase();
+      } else if (sortField === "price") {
+        valA = a.price || 0;
+        valB = b.price || 0;
+      } else if (sortField === "stock") {
+        valA = a.availableQuantity || 0;
+        valB = b.availableQuantity || 0;
+      }
+
+      if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+      if (valA > valB) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [data?.data, sortField, sortDirection]);
+
+  const getSortIcon = (field: "name" | "price" | "stock") => {
+    const isActive = sortField === field;
+    if (!isActive)
+      return <ArrowUpDown size={16} className="ml-1 text-gray-300" />;
+
+    let label = "";
+    if (field === "name") label = sortDirection === "asc" ? "A–Z" : "Z–A";
+    else label = sortDirection === "asc" ? "Low–High" : "High–Low";
+
+    return (
+      <div className="flex items-center ml-1 px-2 py-1 bg-green-50 rounded-full border border-emerald-100 text-[#22AD5C] shadow-sm animate-in fade-in zoom-in duration-200">
+        {sortDirection === "asc" ? (
+          <ChevronUp size={14} className="mr-1" />
+        ) : (
+          <ChevronDown size={14} className="mr-1" />
+        )}
+        <span className="text-[10px] font-bold tracking-tight uppercase">
+          {label}
+        </span>
+      </div>
+    );
+  };
 
   // If the API doesn't provide pagination metadata, we assume it returned all products
   // and handle pagination client-side.
   const pagination = data?.pagination || {
-    total: rawProducts.length,
+    total: sortedProducts.length,
     page: currentPage,
     limit: itemsPerPage,
-    totalPages: Math.ceil(rawProducts.length / itemsPerPage) || 1,
+    totalPages: Math.ceil(sortedProducts.length / itemsPerPage) || 1,
   };
 
   // If we're doing client-side pagination (no metadata from API), slice the array.
   const products = data?.pagination
-    ? rawProducts
-    : rawProducts.slice(
+    ? sortedProducts
+    : sortedProducts.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage,
       );
@@ -315,11 +385,32 @@ export default function Products() {
             <thead className="bg-transparent">
               <tr className="text-left text-gray-800 font-semibold">
                 <th className="px-6 py-2">Image</th>
-                <th className="px-6 py-2">Product Name</th>
+                <th
+                  className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors"
+                  onClick={() => handleSort("name")}
+                >
+                  <div className="flex items-center">
+                    Product Name {getSortIcon("name")}
+                  </div>
+                </th>
                 <th className="px-6 py-2">SKU</th>
                 <th className="px-6 py-2 text-center">Status</th>
-                <th className="px-6 py-2 text-center">Price</th>
-                <th className="px-6 py-2 text-center">Stock</th>
+                <th
+                  className="px-6 py-2 text-center cursor-pointer hover:text-gray-600 transition-colors"
+                  onClick={() => handleSort("price")}
+                >
+                  <div className="flex items-center justify-center">
+                    Price {getSortIcon("price")}
+                  </div>
+                </th>
+                <th
+                  className="px-6 py-2 text-center cursor-pointer hover:text-gray-600 transition-colors"
+                  onClick={() => handleSort("stock")}
+                >
+                  <div className="flex items-center justify-center">
+                    Stock {getSortIcon("stock")}
+                  </div>
+                </th>
                 <th className="px-6 py-2 text-center">Action</th>
               </tr>
             </thead>

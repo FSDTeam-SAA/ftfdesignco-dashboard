@@ -1,11 +1,11 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useDeleteOrder, useRecentOrders } from "../hooks/useRecentOrders";
 import { useDebounce } from "@/hooks/useDebounce";
 import Pagination from "@/components/shared/Pagination";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Eye, Search, Trash2 } from "lucide-react";
+import { Eye, Trash2, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Order } from "../types/index";
 import OrderDetailsModal from "./OrderDetailsModal";
@@ -40,6 +40,12 @@ export default function RecentOrders() {
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const deleteOrderMutation = useDeleteOrder();
+
+  // Sorting State
+  const [sortField, setSortField] = useState<"name" | "email" | "date" | null>(
+    null,
+  );
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const { data, isLoading, error } = useRecentOrders(
     currentPage,
@@ -83,6 +89,70 @@ export default function RecentOrders() {
     }
   };
 
+  const handleSort = (field: "name" | "email" | "date") => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const sortedOrders = useMemo(() => {
+    const orders = data?.data || [];
+    if (!sortField) return orders;
+
+    return [...orders].sort((a, b) => {
+      let valA: string | number = "";
+      let valB: string | number = "";
+
+      if (sortField === "name") {
+        valA = a.user
+          ? `${a.user.firstName} ${a.user.lastName}`.toLowerCase()
+          : "guest dealer";
+        valB = b.user
+          ? `${b.user.firstName} ${b.user.lastName}`.toLowerCase()
+          : "guest dealer";
+      } else if (sortField === "email") {
+        valA = (a.user?.email || "n/a").toLowerCase();
+        valB = (b.user?.email || "n/a").toLowerCase();
+      } else if (sortField === "date") {
+        valA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        valB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      }
+
+      if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+      if (valA > valB) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [data?.data, sortField, sortDirection]);
+
+  const getSortIcon = (field: "name" | "email" | "date") => {
+    const isActive = sortField === field;
+    if (!isActive)
+      return <ArrowUpDown size={16} className="ml-1 text-gray-300" />;
+
+    return (
+      <div className="flex items-center ml-1 px-2 py-1 bg-green-50 rounded-full border border-emerald-100 text-[#22AD5C] shadow-sm animate-in fade-in zoom-in duration-200">
+        {sortDirection === "asc" ? (
+          <>
+            <ChevronUp size={14} className="mr-1" />
+            <span className="text-[10px] font-bold tracking-tight">
+              {field === "date" ? "Oldest" : "A–Z"}
+            </span>
+          </>
+        ) : (
+          <>
+            <ChevronDown size={14} className="mr-1" />
+            <span className="text-[10px] font-bold tracking-tight">
+              {field === "date" ? "Newest" : "Z–A"}
+            </span>
+          </>
+        )}
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="mt-8 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -107,7 +177,6 @@ export default function RecentOrders() {
     );
   }
 
-  const orders = data?.data || [];
   const pagination = {
     total: data?.meta?.total || 0,
     page: data?.meta?.page || 1,
@@ -174,14 +243,29 @@ export default function RecentOrders() {
               <th className="pb-6 px-4 text-center text-lg font-medium text-gray-400">
                 User ID
               </th>
-              <th className="pb-6 px-4 text-center text-lg font-medium text-gray-400">
-                User&apos;s Name
+              <th
+                className="pb-6 px-4 text-center text-lg font-medium text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
+                onClick={() => handleSort("name")}
+              >
+                <div className="flex items-center justify-center">
+                  User&apos;s Name {getSortIcon("name")}
+                </div>
               </th>
-              <th className="pb-6 px-4 text-center text-lg font-medium text-gray-400">
-                Ordered Date
+              <th
+                className="pb-6 px-4 text-center text-lg font-medium text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
+                onClick={() => handleSort("date")}
+              >
+                <div className="flex items-center justify-center">
+                  Ordered Date {getSortIcon("date")}
+                </div>
               </th>
-              <th className="pb-6 px-4 text-center text-lg font-medium text-gray-400">
-                User&apos;s Email
+              <th
+                className="pb-6 px-4 text-center text-lg font-medium text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
+                onClick={() => handleSort("email")}
+              >
+                <div className="flex items-center justify-center">
+                  User&apos;s Email {getSortIcon("email")}
+                </div>
               </th>
               <th className="pb-6 px-4 text-center text-lg font-medium text-gray-400">
                 Action
@@ -189,14 +273,14 @@ export default function RecentOrders() {
             </tr>
           </thead>
           <tbody className="text-gray-700">
-            {orders.length === 0 ? (
+            {sortedOrders.length === 0 ? (
               <tr>
                 <td colSpan={5} className="py-10 text-center text-gray-400">
                   No recent orders found.
                 </td>
               </tr>
             ) : (
-              orders.map((order: Order, index: number) => (
+              sortedOrders.map((order: Order, index: number) => (
                 <tr
                   key={order._id || index}
                   className={`${index % 2 === 0 ? "bg-[#F8FAFC]" : "bg-white"} hover:bg-gray-50 transition-colors`}

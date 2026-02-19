@@ -11,6 +11,11 @@ export interface User {
   categoryName?: string;
   location?: string;
   balance?: number;
+  role_id?: {
+    _id: string;
+    roleTitle: string;
+    images?: string;
+  };
   profileImage?: string;
   status?: "active" | "inactive";
   createdAt?: string;

@@ -117,7 +117,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
         homeAddress: user.homeAddress || "",
         city: user.city || "",
         region: user.region || "",
-        categoryName: user.categoryName || "",
+        categoryName: user.categoryName || user.role_id?.roleTitle || "",
         location: user.location || "",
         balance: user.balance || 0,
         status: user.status || "active",
