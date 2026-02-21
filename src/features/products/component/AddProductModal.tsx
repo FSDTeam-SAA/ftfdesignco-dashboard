@@ -36,8 +36,8 @@ const productSchema = z.object({
   price: z.coerce.number().min(0.01, "Price must be greater than 0"),
   availableQuantity: z.coerce.number().min(0, "Stock must be at least 0"),
   // status: z.enum(["active", "inactive"]),
-  role: z.string().min(1, "Job / Role is required"),
-  targetRoles: z.string().optional(),
+  role: z.string().optional(),
+  targetRoles: z.array(z.string()).min(1, "At least one target role is required"),
   region: z.string().optional(),
 });
 
@@ -122,11 +122,17 @@ export default function AddProductModal({
     formData.append("availableQuantity", values.availableQuantity.toString());
     formData.append("price", values.price.toString());
     formData.append("status", "active");
-    formData.append("role", values.role);
+    formData.append("role", values.targetRoles[0]); // Fallback for legacy 'role' field
+
+    // Append targetRoles[]
+    values.targetRoles.forEach((roleId) => {
+      formData.append("targetRoles[]", roleId);
+    });
+
     if (values.region) {
       formData.append("rigion", values.region);
     }
- 
+
 
     // Append image(s) - The Postman shows 'image' as a File
     if (imageFiles.length > 0) {
@@ -184,9 +190,8 @@ export default function AddProductModal({
                 id="title"
                 {...register("title")}
                 placeholder="Enter product title"
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
-                  errors.title ? "border-red-500" : ""
-                }`}
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.title ? "border-red-500" : ""
+                  }`}
               />
               {errors.title && (
                 <p className="text-red-500 text-xs mt-1">
@@ -194,47 +199,58 @@ export default function AddProductModal({
                 </p>
               )}
             </div>
- 
+
 
             <div className="space-y-2">
               <Label htmlFor="role" className="text-gray-700 font-semibold">
                 Job / Role *
               </Label>
-              <Select
-                onValueChange={(val) => {
-                  setValue("role", val);
-                  // Also set 'type' to the category label if needed by backend,
-                  // or keep it separate. The Postman shows 'type' as 'Apparel' and 'role' as ID.
-                  const selectedCategory = categoryData?.data.find(
-                    (c) => c._id === val,
-                  );
-                  if (selectedCategory) {
-                    setValue("type", selectedCategory.roleTitle);
-                  }
-                }}
-              >
-                <SelectTrigger
-                  className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
-                    errors.role ? "border-red-500" : ""
-                  }`}
-                >
-                  <SelectValue
-                    placeholder={
-                      isCategoriesLoading ? "Loading..." : "Select Job/Role"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {categoryData?.data.map((category) => (
-                    <SelectItem key={category._id} value={category._id}>
-                      {category.roleTitle}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.role && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 border border-gray-200 rounded-lg">
+                {isCategoriesLoading ? (
+                  <p className="text-gray-400 text-sm italic">Loading roles...</p>
+                ) : (
+                  categoryData?.data.map((category) => {
+                    const selectedRoles = watch("targetRoles") || [];
+                    const isChecked = selectedRoles.includes(category._id);
+
+                    return (
+                      <div key={category._id} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`role-${category._id}`}
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const current = watch("targetRoles") || [];
+                            if (e.target.checked) {
+                              setValue("targetRoles", [...current, category._id]);
+                            } else {
+                              setValue(
+                                "targetRoles",
+                                current.filter((id) => id !== category._id)
+                              );
+                            }
+
+                            // Keep 'type' updated for create product compatibility if needed
+                            if (e.target.checked && current.length === 0) {
+                              setValue("type", category.roleTitle);
+                            }
+                          }}
+                          className="w-4 h-4 text-[#22AD5C] border-gray-300 rounded focus:ring-[#22AD5C]"
+                        />
+                        <Label
+                          htmlFor={`role-${category._id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {category.roleTitle}
+                        </Label>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              {errors.targetRoles && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors.role.message}
+                  {errors.targetRoles.message}
                 </p>
               )}
             </div>
@@ -247,9 +263,8 @@ export default function AddProductModal({
                 id="size"
                 {...register("size")}
                 placeholder="e.g. M, L, XL or 42, 44"
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
-                  errors.size ? "border-red-500" : ""
-                }`}
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.size ? "border-red-500" : ""
+                  }`}
               />
               {errors.size && (
                 <p className="text-red-500 text-xs mt-1">
@@ -267,9 +282,8 @@ export default function AddProductModal({
                 type="number"
                 step="0.01"
                 {...register("price")}
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
-                  errors.price ? "border-red-500" : ""
-                }`}
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.price ? "border-red-500" : ""
+                  }`}
               />
               {errors.price && (
                 <p className="text-red-500 text-xs mt-1">
@@ -289,9 +303,8 @@ export default function AddProductModal({
                 id="availableQuantity"
                 type="number"
                 {...register("availableQuantity")}
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
-                  errors.availableQuantity ? "border-red-500" : ""
-                }`}
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.availableQuantity ? "border-red-500" : ""
+                  }`}
               />
               {errors.availableQuantity && (
                 <p className="text-red-500 text-xs mt-1">
@@ -326,9 +339,8 @@ export default function AddProductModal({
               </Label>
               <Select onValueChange={(val) => setValue("region", val)}>
                 <SelectTrigger
-                  className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
-                    errors.region ? "border-red-500" : ""
-                  }`}
+                  className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.region ? "border-red-500" : ""
+                    }`}
                 >
                   <SelectValue placeholder="Select Regional Office" />
                 </SelectTrigger>
@@ -364,9 +376,8 @@ export default function AddProductModal({
               {...register("description")}
               rows={4}
               placeholder="Enter product description..."
-              className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
-                errors.description ? "border-red-500" : ""
-              }`}
+              className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.description ? "border-red-500" : ""
+                }`}
             />
             {errors.description && (
               <p className="text-red-500 text-xs mt-1">
