@@ -2,16 +2,28 @@
 
 import axiosInstance from "@/instance/axios-instance";
 
-export const getRecentOrders = async (page: number = 1, limit: number = 10) => {
-  const response = await axiosInstance.get(`/order/get-all?page=${page}&limit=${limit}`);
+/**
+ * Get Recent Orders with optional search and pagination
+ */
+export const getRecentOrders = async (
+  page: number = 1,
+  limit: number = 10,
+  searchTerm: string = "",
+  region: string = "",
+) => {
+  const response = await axiosInstance.get("/order/get-all", {
+    params: {
+      searchTerm: searchTerm || undefined,
+      page,
+      limit,
+      region: region || undefined,
+    },
+  });
   return response.data;
 };
 
-// /order/get-all?searchTerm=Addison
-
-// get all with search params
-
-export const getallsearch = async (searchTerm: string, page: number = 1, limit: number = 10) => {
-  const response = await axiosInstance.get(`/order/get-all?searchTerm=${searchTerm}&page=${page}&limit=${limit}`);
+//  Delete Order
+export const deleteOrder = async (id: string) => {
+  const response = await axiosInstance.delete(`/order/${id}`);
   return response.data;
 };

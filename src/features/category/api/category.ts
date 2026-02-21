@@ -37,7 +37,7 @@ export const deleteCategory = async (
   id: string,
 ): Promise<SingleCategoryResponse> => {
   try {
-    const response = await axiosInstance.delete(`/role/delete-role/${id}`);
+    const response = await axiosInstance.delete(`/role/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error deleting category:", error);

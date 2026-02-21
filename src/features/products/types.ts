@@ -61,6 +61,13 @@ export interface ProductResponse {
   pagination: PaginationMetadata;
 }
 
+export interface ProductFilters {
+  searchTerm?: string;
+  price?: number;
+  availableQuantity?: number;
+  roleTitle?: string;
+}
+
 export interface CommonResponse {
   success: boolean;
   message: string;

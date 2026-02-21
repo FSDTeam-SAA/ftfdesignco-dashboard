@@ -18,7 +18,7 @@ export default function Category() {
   const categories: CategoryType[] = data?.data || [];
 
   const handleDeleteCategory = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this category?")) return;
+ 
     try {
       const response = await deleteCategory(id);
       if (response.success) {

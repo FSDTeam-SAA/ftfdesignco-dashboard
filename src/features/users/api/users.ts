@@ -23,7 +23,7 @@ export const editUser = async (
   id: string,
   data: UpdateUserData,
 ): Promise<CommonUserResponse> => {
-  const response = await axiosInstance.put(`/user/update-profile`, data);
+  const response = await axiosInstance.put(`/user/update-profile/${id}`, data);
   return response.data;
 };
 
@@ -68,5 +68,14 @@ export const downloadUsersPDF = async (search: string = "") => {
     params: { search },
     responseType: "blob",
   });
+  return response.data;
+};
+
+
+// user update balance
+export const updateUserBalance = async (
+  data: { balance: number },
+): Promise<CommonUserResponse> => {
+  const response = await axiosInstance.put(`/user/update-balance`, data);
   return response.data;
 };
