@@ -33,9 +33,8 @@ export default function Inventory() {
   const [search, setSearch] = useState("");
 
   // Sorting State
-  const [sortField, setSortField] = useState<"available" | "onHand" | null>(
-    null,
-  );
+  type SortableField = "available" | "onHand" | "publishDate" | "orderId";
+  const [sortField, setSortField] = useState<SortableField | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const { data, isLoading, error } = useInventory(selectedRegion);
@@ -50,18 +49,26 @@ export default function Inventory() {
     if (!sortField) return items;
 
     return [...items].sort((a, b) => {
-      // In this specific implementation, On Hand and Available use the same field 'availableQuantity'
-      // but we handle them separately for clarity and future-proofing.
-      const valA = a.availableQuantity;
-      const valB = b.availableQuantity;
+      let comparison = 0;
 
-      if (valA < valB) return sortDirection === "asc" ? -1 : 1;
-      if (valA > valB) return sortDirection === "asc" ? 1 : -1;
-      return 0;
+      switch (sortField) {
+        case "available":
+        case "onHand":
+          comparison = a.availableQuantity - b.availableQuantity;
+          break;
+        case "publishDate":
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+        case "orderId":
+          comparison = a._id.localeCompare(b._id);
+          break;
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison;
     });
   }, [items, sortField, sortDirection]);
 
-  const handleSort = (field: "available" | "onHand") => {
+  const handleSort = (field: SortableField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
@@ -129,11 +136,10 @@ export default function Inventory() {
           <button
             key={office}
             onClick={() => handleRegionChange(office)}
-            className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${
-              selectedRegion === office
+            className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${selectedRegion === office
                 ? "bg-[#22AD5C] text-white shadow-md shadow-green-100 cursor-pointer"
                 : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-100 cursor-pointer"
-            }`}
+              }`}
           >
             {office}
           </button>

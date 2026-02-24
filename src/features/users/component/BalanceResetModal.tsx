@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -9,6 +9,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Form,
   FormControl,
@@ -39,6 +49,8 @@ const BalanceResetModal: React.FC<BalanceResetModalProps> = ({
   onClose,
 }) => {
   const { mutateAsync: updateBalance, isPending } = useUpdateUserBalance();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingData, setPendingData] = useState<BalanceResetFormValues | null>(null);
 
   const form = useForm<BalanceResetFormValues>({
     resolver: zodResolver(balanceResetSchema),
@@ -47,12 +59,20 @@ const BalanceResetModal: React.FC<BalanceResetModalProps> = ({
     },
   });
 
-  const onSubmit = async (data: BalanceResetFormValues) => {
+  const handleFormSubmit = (data: BalanceResetFormValues) => {
+    setPendingData(data);
+    setShowConfirm(true);
+  };
+
+  const onConfirm = async () => {
+    if (!pendingData) return;
+    setShowConfirm(false);
     try {
-      const response = await updateBalance(data);
+      const response = await updateBalance(pendingData);
       if (response.success) {
         toast.success(response.message || "Balance updated successfully");
         form.reset();
+        setPendingData(null);
         onClose();
       } else {
         toast.error(response.message || "Failed to update balance");
@@ -64,71 +84,102 @@ const BalanceResetModal: React.FC<BalanceResetModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] border-none shadow-2xl rounded-3xl p-0 bg-white overflow-hidden">
-        <DialogHeader className="p-8 pb-0">
-          <DialogTitle className="text-2xl font-extrabold text-gray-900 tracking-tight">
-            Balance Reset
-          </DialogTitle>
-          <p className="text-gray-500 font-medium mt-1">
-            Enter the new balance to apply to users.
-          </p>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[425px] border-none shadow-2xl rounded-3xl p-0 bg-white overflow-hidden">
+          <DialogHeader className="p-8 pb-0">
+            <DialogTitle className="text-2xl font-extrabold text-gray-900 tracking-tight">
+              Balance Reset
+            </DialogTitle>
+            <p className="text-gray-500 font-medium mt-1">
+              Enter the new balance to apply to users.
+            </p>
+          </DialogHeader>
 
-        <div className="p-8">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="balance"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 font-bold">
-                      New Balance
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        {...field}
-                        className="rounded-xl border-gray-200 h-12 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-semibold"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex gap-4 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onClose}
-                  disabled={isPending}
-                  className="flex-1 h-12 rounded-xl border-gray-200 font-bold text-gray-600 hover:bg-gray-50 transition-all"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isPending}
-                  className="flex-1 h-12 rounded-xl bg-emerald-500 hover:bg-emerald-600 font-bold text-white shadow-lg shadow-emerald-200 transition-all hover:-translate-y-0.5 border-none"
-                >
-                  {isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    "Update Balance"
+          <div className="p-8">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="balance"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-bold">
+                        New Balance
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="0.00"
+                          {...field}
+                          className="rounded-xl border-gray-200 h-12 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-semibold"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
-      </DialogContent>
-    </Dialog>
+                />
+
+                <div className="flex gap-4 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onClose}
+                    disabled={isPending}
+                    className="flex-1 h-12 rounded-xl border-gray-200 font-bold text-gray-600 hover:bg-gray-50 transition-all"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isPending}
+                    className="flex-1 h-12 rounded-xl bg-emerald-500 hover:bg-emerald-600 font-bold text-white shadow-lg shadow-emerald-200 transition-all hover:-translate-y-0.5 border-none"
+                  >
+                    {isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      "Update Balance"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will update the balance for all users to{" "}
+              <span className="font-bold text-gray-900">
+                {pendingData?.balance}
+              </span>
+              . This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              className="rounded-xl"
+              onClick={() => setPendingData(null)}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white"
+              onClick={onConfirm}
+            >
+              Yes, Update Balance
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
