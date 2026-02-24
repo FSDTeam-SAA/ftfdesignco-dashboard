@@ -23,6 +23,16 @@ import {
   ChevronDown,
   ArrowUpDown,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { useMemo } from "react";
 import { useCategories } from "@/features/category/hooks/useCategory";
@@ -154,9 +164,9 @@ export default function Products() {
   const products = data?.pagination
     ? sortedProducts
     : sortedProducts.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage,
-      );
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage,
+    );
 
   const { mutateAsync: deleteProduct } = useDeleteProduct();
 
@@ -164,6 +174,8 @@ export default function Products() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   const handleViewProduct = (product: Product) => {
     setSelectedProduct(product);
@@ -175,10 +187,17 @@ export default function Products() {
     setIsEditModalOpen(true);
   };
 
+  const handleDeleteClick = (id: string) => {
+    setProductToDelete(id);
+    setIsDeleteConfirmOpen(true);
+  };
+
   // delete product
-  const handleDeleteProduct = async (id: string) => {
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return;
+
     try {
-      const response = await deleteProduct(id);
+      const response = await deleteProduct(productToDelete);
       if (response.success) {
         toast.success(response.message || "Product deleted successfully");
       } else {
@@ -190,6 +209,9 @@ export default function Products() {
         errorMessage = error.response?.data?.message || errorMessage;
       }
       toast.error(errorMessage);
+    } finally {
+      setIsDeleteConfirmOpen(false);
+      setProductToDelete(null);
     }
   };
 
@@ -303,7 +325,7 @@ export default function Products() {
                 <PencilLine size={20} />
               </button>
               <button
-                onClick={() => handleDeleteProduct(product._id)}
+                onClick={() => handleDeleteClick(product._id)}
                 className="text-red-400 hover:text-red-600 transition-colors p-1.5 hover:bg-red-50 rounded-lg cursor-pointer"
               >
                 <Trash2 size={20} />
@@ -448,6 +470,34 @@ export default function Products() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
       />
+
+      {/* Delete Confirmation */}
+      <AlertDialog
+        open={isDeleteConfirmOpen}
+        onOpenChange={setIsDeleteConfirmOpen}
+      >
+        <AlertDialogContent className="rounded-2xl border-none p-6 bg-white shadow-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold text-gray-900">
+              Are you sure?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-500">
+              This action cannot be undone. This will permanently remove the product from the catalog.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 gap-3 flex sm:flex-row flex-col-reverse">
+            <AlertDialogCancel className="rounded-xl border-gray-200 font-semibold h-11 px-6">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteProduct}
+              className="rounded-xl bg-red-500 hover:bg-red-600 font-semibold h-11 px-6 border-none text-white"
+            >
+              Yes, Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

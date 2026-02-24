@@ -9,18 +9,36 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { toast } from "sonner";
 import { isAxiosError } from "axios";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Category() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const { data, isLoading, error } = useCategories();
   const { mutateAsync: deleteCategory } = useDeleteCategory();
 
   const categories: CategoryType[] = data?.data || [];
 
-  const handleDeleteCategory = async (id: string) => {
- 
+  const handleDeleteClick = (id: string) => {
+    setCategoryToDelete(id);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+
     try {
-      const response = await deleteCategory(id);
+      const response = await deleteCategory(categoryToDelete);
       if (response.success) {
         toast.success(response.message || "Category deleted successfully");
       } else {
@@ -32,6 +50,9 @@ export default function Category() {
         errorMessage = error.response?.data?.message || errorMessage;
       }
       toast.error(errorMessage);
+    } finally {
+      setIsDeleteConfirmOpen(false);
+      setCategoryToDelete(null);
     }
   };
 
@@ -87,7 +108,7 @@ export default function Category() {
         <td className="px-6 py-4 text-center rounded-r-2xl border-y border-r">
           <div className="flex items-center justify-center gap-3">
             <button
-              onClick={() => handleDeleteCategory(category._id)}
+              onClick={() => handleDeleteClick(category._id)}
               className="text-red-400 hover:text-red-600 transition-colors p-1.5 hover:bg-red-50 rounded-lg cursor-pointer"
             >
               <Trash2 size={20} />
@@ -153,6 +174,34 @@ export default function Category() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
       />
+
+      {/* Delete Confirmation */}
+      <AlertDialog
+        open={isDeleteConfirmOpen}
+        onOpenChange={setIsDeleteConfirmOpen}
+      >
+        <AlertDialogContent className="rounded-2xl border-none p-6 bg-white shadow-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold text-gray-900">
+              Are you sure?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-500">
+              This action cannot be undone. This will permanently remove the category/role from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 gap-3 flex sm:flex-row flex-col-reverse">
+            <AlertDialogCancel className="rounded-xl border-gray-200 font-semibold h-11 px-6">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCategory}
+              className="rounded-xl bg-red-500 hover:bg-red-600 font-semibold h-11 px-6 border-none text-white"
+            >
+              Yes, Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
