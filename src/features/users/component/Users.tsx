@@ -160,9 +160,9 @@ export default function Users() {
   const users = data?.pagination
     ? sortedUsers
     : sortedUsers.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage,
-      );
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage,
+    );
 
   const renderTableBody = () => {
     if (isLoading) {
@@ -189,6 +189,13 @@ export default function Users() {
     }
 
     return (users as User[]).map((user) => {
+      const displayRole =
+        user.role === "employer"
+          ? "Employee"
+          : user.role === "owner"
+            ? "Admin"
+            : user.role;
+
       const roleColor =
         user.role === "owner"
           ? "text-purple-600 bg-purple-50"
@@ -233,7 +240,7 @@ export default function Users() {
             <Badge
               className={`${roleColor} px-3 py-1 rounded-lg border-none font-bold capitalize text-xs shadow-none hover:opacity-80`}
             >
-              {user.role}
+              {displayRole}
             </Badge>
           </td>
           <td className="px-6 py-4 text-center rounded-r-2xl border-y border-r">

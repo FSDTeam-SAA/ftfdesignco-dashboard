@@ -9,12 +9,14 @@ import Image from "next/image";
 import { Pencil, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
 import EditInventoryModal from "./EditInventoryModal";
 
+type SortableField = "available" | "onHand" | "publishDate" | "orderId";
+
 interface InventoryTableProps {
   items: InventoryItem[];
   isLoading: boolean;
-  sortField: "available" | "onHand" | null;
+  sortField: SortableField | null;
   sortDirection: "asc" | "desc";
-  onSort: (field: "available" | "onHand") => void;
+  onSort: (field: SortableField) => void;
 }
 
 export default function InventoryTable({
@@ -32,7 +34,7 @@ export default function InventoryTable({
     setIsEditModalOpen(true);
   };
 
-  const getSortIcon = (field: "available" | "onHand") => {
+  const getSortIcon = (field: SortableField) => {
     const isActive = sortField === field;
     const sortLabel = isActive
       ? sortDirection === "asc"
@@ -48,11 +50,10 @@ export default function InventoryTable({
 
     return (
       <div
-        className={`flex items-center ml-2 px-2 py-1 rounded-full border transition-all duration-200 ${
-          isActive
-            ? "bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm"
-            : "bg-gray-50 border-gray-100 text-gray-400 group-hover:border-emerald-100 group-hover:text-emerald-500"
-        }`}
+        className={`flex items-center ml-2 px-2 py-1 rounded-full border transition-all duration-200 ${isActive
+          ? "bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm"
+          : "bg-gray-50 border-gray-100 text-gray-400 group-hover:border-emerald-100 group-hover:text-emerald-500"
+          }`}
       >
         <Icon size={12} className="mr-1" />
         <span className="text-[10px] font-bold whitespace-nowrap">
@@ -101,9 +102,23 @@ export default function InventoryTable({
             <thead>
               <tr className="text-left text-gray-400 font-bold text-xs uppercase tracking-wider">
                 <th className="px-6 py-2 w-20"></th>
-                <th className="px-6 py-2">Order Id</th>
+                <th
+                  className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors group"
+                  onClick={() => onSort("orderId")}
+                >
+                  <div className="flex items-center">
+                    Order Id {getSortIcon("orderId")}
+                  </div>
+                </th>
                 <th className="px-6 py-2 text-center">SKU</th>
-                <th className="px-6 py-2 text-center">Publish Date</th>
+                <th
+                  className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors group"
+                  onClick={() => onSort("publishDate")}
+                >
+                  <div className="flex items-center justify-center">
+                    Publish Date {getSortIcon("publishDate")}
+                  </div>
+                </th>
                 <th
                   className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors group"
                   onClick={() => onSort("available")}
