@@ -296,7 +296,7 @@ export default function RecentOrders() {
                   </td>
                   <td className="py-4 px-4 text-center text-md font-medium text-gray-600">
                     {order.createdAt
-                      ? format(new Date(order.createdAt), "dd/MM/yyyy")
+                      ? format(new Date(order.createdAt), "MM/dd/yyyy")
                       : "N/A"}
                   </td>
                   <td className="py-4 px-4 text-center text-md font-medium text-gray-600">
