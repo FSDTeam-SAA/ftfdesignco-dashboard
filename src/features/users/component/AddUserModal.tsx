@@ -43,8 +43,10 @@ const addUserSchema = z.object({
   city: z.string().min(2, "City is required"),
   region: z.string().min(2, "Region is required"),
   categoryName: z.string().min(1, "Job / Role is required"),
-  // companyName: z.string().min(2, "Company name is required"),
-  location: z.string().min(2, "Location is required"),
+  location: z.array(z.string()).min(1, "At least one regional office is required"),
+  gender: z.enum(["male", "female", "other"], {
+    required_error: "Gender is required",
+  }),
   balance: z.coerce.number().min(0, "Balance must be at least 0"),
 });
 
@@ -75,8 +77,8 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
       city: "",
       region: "",
       categoryName: "",
-      // companyName: "",
-      location: "",
+      location: [],
+      gender: "male",
       balance: 0,
     },
   });
@@ -96,7 +98,11 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
   // Add User Submit Handler
   const onSubmit = (data: AddUserFormValues) => {
     console.log("Adding New User with Category:", data);
-    addUser(data);
+    const payload = {
+      ...data,
+      location: data.location.join('|'),
+    };
+    addUser(payload);
     if (isAddingUser) {
       toast.loading("Adding user...");
     }
@@ -342,37 +348,99 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
                 <FormField
                   control={form.control}
-                  name="location"
+                  name="gender"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 font-bold">
-                        REGIONAL OFFICE
+                        Gender
                       </FormLabel>
-                      <FormControl>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
                           <SelectTrigger className="rounded-xl border-gray-200 h-12 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
-                            <SelectValue placeholder="Select Regional Office" />
+                            <SelectValue placeholder="Select Gender" />
                           </SelectTrigger>
-                          <SelectContent className="cursor-pointer">
-                            {regionalOffice.map((office) => (
-                              <SelectItem key={office} value={office} className="border border-gray-200 my-1 cursor-pointer">
-                                {office}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
+                        </FormControl>
+                        <SelectContent className="rounded-xl border-gray-100">
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-bold">
+                      REGIONAL OFFICE
+                    </FormLabel>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 border border-gray-200 rounded-xl bg-gray-50/50">
+                      {regionalOffice.map((office) => {
+                        const selectedOffices = field.value || [];
+                        const isChecked = selectedOffices.includes(office);
+
+                        return (
+                          <div
+                            key={office}
+                            className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white transition-colors cursor-pointer border border-transparent hover:border-gray-100"
+                            onClick={() => {
+                              const currentArray = Array.isArray(selectedOffices) ? selectedOffices : [];
+                              if (isChecked) {
+                                field.onChange(
+                                  currentArray.filter((item) => item !== office)
+                                );
+                              } else {
+                                field.onChange([
+                                  ...currentArray,
+                                  office,
+                                ]);
+                              }
+                            }}
+                          >
+                            <div
+                              className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isChecked
+                                ? "bg-emerald-500 border-emerald-500 text-white"
+                                : "border-gray-300 bg-white"
+                                }`}
+                            >
+                              {isChecked && (
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              )}
+                            </div>
+                            <span className="text-sm text-gray-700 font-medium">
+                              {office}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
