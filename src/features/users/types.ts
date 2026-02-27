@@ -9,7 +9,8 @@ export interface User {
   city?: string;
   region?: string;
   categoryName?: string;
-  location?: string;
+  location?: string | string[];
+  gender?: "male" | "female" | "other";
   balance?: number;
   role_id?: {
     _id: string;
@@ -44,7 +45,8 @@ export interface UpdateUserData {
   city?: string;
   region?: string;
   categoryName?: string;
-  location?: string;
+  location?: string | string[];
+  gender?: "male" | "female" | "other";
   balance?: number;
   status?: "active" | "inactive";
 }
@@ -66,7 +68,8 @@ export interface AddUserData {
   region: string;
   categoryName: string;
   // companyName: string;
-  location: string;
+  location: string | string[];
+  gender: "male" | "female" | "other";
   balance: number;
 }
 export interface CSVErrorDetail {

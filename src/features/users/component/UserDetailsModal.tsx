@@ -45,11 +45,10 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                   {user.role}
                 </Badge>
                 <Badge
-                  className={`${
-                    user.status === "active"
-                      ? "bg-green-100 text-green-700 hover:bg-green-200"
-                      : "bg-red-100 text-red-700 hover:bg-red-200"
-                  } border-none font-semibold capitalize text-xs shadow-none`}
+                  className={`${user.status === "active"
+                    ? "bg-green-100 text-green-700 hover:bg-green-200"
+                    : "bg-red-100 text-red-700 hover:bg-red-200"
+                    } border-none font-semibold capitalize text-xs shadow-none`}
                 >
                   {user.status || "Active"}
                 </Badge>
@@ -90,7 +89,17 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
               </h3>
               <div className="bg-gray-50 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DetailItem label="Job / Role" value={user.categoryName} />
-                <DetailItem label="Regional Office" value={user.location} />
+                <DetailItem label="Gender" value={user.gender} />
+                <DetailItem
+                  label="Regional Office"
+                  value={
+                    Array.isArray(user.location)
+                      ? user.location.join(", ")
+                      : user.location
+                        ? user.location.replaceAll("|", ", ")
+                        : user.location
+                  }
+                />
                 <DetailItem
                   label="Current Balance"
                   value={

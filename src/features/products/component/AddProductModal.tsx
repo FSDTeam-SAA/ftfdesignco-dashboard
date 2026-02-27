@@ -15,13 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { X, Upload, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useAddProduct } from "../hooks/useProducts";
 import { useCategories } from "../../category/hooks/useCategory";
@@ -38,7 +31,7 @@ const productSchema = z.object({
   // status: z.enum(["active", "inactive"]),
   role: z.string().optional(),
   targetRoles: z.array(z.string()).min(1, "At least one target role is required"),
-  region: z.string().optional(),
+  regionalOffices: z.array(z.string()).min(1, "At least one regional office is required"),
 });
 
 // REGIONAL OFFICE Name
@@ -83,7 +76,7 @@ export default function AddProductModal({
       // status: "active",
       price: 0,
       availableQuantity: 0,
-      region: "",
+      regionalOffices: [],
     },
   });
 
@@ -129,9 +122,10 @@ export default function AddProductModal({
       formData.append("targetRoles[]", roleId);
     });
 
-    if (values.region) {
-      formData.append("rigion", values.region);
-    }
+    // Append rigion[]
+    values.regionalOffices.forEach((office) => {
+      formData.append("rigion", office);
+    });
 
 
     // Append image(s) - The Postman shows 'image' as a File
@@ -205,44 +199,68 @@ export default function AddProductModal({
               <Label htmlFor="role" className="text-gray-700 font-semibold">
                 Job / Role *
               </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 border border-gray-200 rounded-lg">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 border border-gray-100 rounded-2xl bg-gray-50/50">
                 {isCategoriesLoading ? (
-                  <p className="text-gray-400 text-sm italic">Loading roles...</p>
+                  <div className="col-span-full flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />
+                  </div>
                 ) : (
                   categoryData?.data.map((category) => {
                     const selectedRoles = watch("targetRoles") || [];
                     const isChecked = selectedRoles.includes(category._id);
 
                     return (
-                      <div key={category._id} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={`role-${category._id}`}
-                          checked={isChecked}
-                          onChange={(e) => {
-                            const current = watch("targetRoles") || [];
-                            if (e.target.checked) {
-                              setValue("targetRoles", [...current, category._id]);
-                            } else {
-                              setValue(
-                                "targetRoles",
-                                current.filter((id) => id !== category._id)
-                              );
-                            }
+                      <div
+                        key={category._id}
+                        onClick={() => {
+                          const current = watch("targetRoles") || [];
+                          if (!isChecked) {
+                            setValue("targetRoles", [...current, category._id]);
+                          } else {
+                            setValue(
+                              "targetRoles",
+                              current.filter((id) => id !== category._id)
+                            );
+                          }
 
-                            // Keep 'type' updated for create product compatibility if needed
-                            if (e.target.checked && current.length === 0) {
-                              setValue("type", category.roleTitle);
-                            }
-                          }}
-                          className="w-4 h-4 text-[#22AD5C] border-gray-300 rounded focus:ring-[#22AD5C]"
-                        />
-                        <Label
-                          htmlFor={`role-${category._id}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          // Keep 'type' updated for create product compatibility if needed
+                          if (!isChecked && current.length === 0) {
+                            setValue("type", category.roleTitle);
+                          }
+                        }}
+                        className={`group relative flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer select-none h-24 text-center ${isChecked
+                          ? "bg-emerald-50 border-emerald-500 shadow-sm"
+                          : "bg-white border-transparent hover:border-gray-200 hover:shadow-sm"
+                          }`}
+                      >
+                        <div
+                          className={`w-5 h-5 rounded-full border flex items-center justify-center absolute top-2 right-2 transition-all ${isChecked
+                            ? "bg-emerald-500 border-emerald-500 text-white"
+                            : "border-gray-300 bg-white"
+                            }`}
                         >
+                          {isChecked && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className={`p-2 rounded-lg mb-1 transition-colors ${isChecked ? "bg-emerald-100 text-emerald-600" : "bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-500"}`}>
+                          <ImageIcon size={18} />
+                        </div>
+                        <span className={`text-xs font-bold leading-tight line-clamp-2 ${isChecked ? "text-emerald-700" : "text-gray-600"}`}>
                           {category.roleTitle}
-                        </Label>
+                        </span>
                       </div>
                     );
                   })
@@ -333,32 +351,66 @@ export default function AddProductModal({
               </Select>
             </div> */}
 
-            <div className="space-y-2">
-              <Label htmlFor="region" className="text-gray-700 font-semibold">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="regionalOffices" className="text-gray-700 font-semibold">
                 Regional Office *
               </Label>
-              <Select onValueChange={(val) => setValue("region", val)}>
-                <SelectTrigger
-                  className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.region ? "border-red-500" : ""
-                    }`}
-                >
-                  <SelectValue placeholder="Select Regional Office" />
-                </SelectTrigger>
-                <SelectContent className="cursor-pointer">
-                  {regionalOffice.map((office) => (
-                    <SelectItem
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 border border-gray-100 rounded-2xl bg-gray-50/50">
+                {regionalOffice.map((office) => {
+                  const selectedOffices = watch("regionalOffices") || [];
+                  const isChecked = selectedOffices.includes(office);
+
+                  return (
+                    <div
                       key={office}
-                      value={office}
-                      className="border border-gray-200 my-1 cursor-pointer"
+                      onClick={() => {
+                        const current = watch("regionalOffices") || [];
+                        if (!isChecked) {
+                          setValue("regionalOffices", [...current, office]);
+                        } else {
+                          setValue(
+                            "regionalOffices",
+                            current.filter((o) => o !== office)
+                          );
+                        }
+                      }}
+                      className={`group relative flex items-center p-3 rounded-xl border-2 transition-all cursor-pointer select-none h-auto gap-3 ${isChecked
+                        ? "bg-emerald-50 border-emerald-500 shadow-sm"
+                        : "bg-white border-transparent hover:border-gray-200 hover:shadow-sm"
+                        }`}
                     >
-                      {office}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.region && (
+                      <div
+                        className={`w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0 ${isChecked
+                          ? "bg-emerald-500 border-emerald-500 text-white"
+                          : "border-gray-300 bg-white"
+                          }`}
+                      >
+                        {isChecked && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className={`text-xs font-semibold leading-tight ${isChecked ? "text-emerald-700" : "text-gray-600"}`}>
+                        {office}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              {errors.regionalOffices && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors.region.message}
+                  {errors.regionalOffices.message}
                 </p>
               )}
             </div>
