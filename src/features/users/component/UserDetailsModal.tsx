@@ -4,6 +4,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { User } from "../types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useCategories } from "@/features/category/hooks/useCategory";
 
 interface UserDetailsModalProps {
   user: User | null;
@@ -16,7 +17,16 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { data: categoriesData } = useCategories();
+  const categories = categoriesData?.data || [];
+
   if (!user) return null;
+
+  const resolvedRoleName =
+    categories.find((c) => c._id === user.selectedRole)?.roleTitle ||
+    user.categoryName ||
+    user.role_id?.roleTitle;
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -88,7 +98,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 Employment Details
               </h3>
               <div className="bg-gray-50 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <DetailItem label="Job / Role" value={user.categoryName} />
+                <DetailItem label="Job / Role" value={resolvedRoleName} />
                 <DetailItem label="Gender" value={user.gender} />
                 <DetailItem
                   label="Regional Office"

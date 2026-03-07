@@ -27,3 +27,9 @@ export const deleteOrder = async (id: string) => {
   const response = await axiosInstance.delete(`/order/${id}`);
   return response.data;
 };
+
+// Update Order Status
+export const updateOrderStatus = async (id: string, status: string) => {
+  const response = await axiosInstance.put(`/order/${id}`, { status });
+  return response.data;
+};

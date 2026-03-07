@@ -19,6 +19,7 @@ export interface User {
   };
   profileImage?: string;
   status?: "active" | "inactive";
+  selectedRole?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -49,6 +50,7 @@ export interface UpdateUserData {
   gender?: "male" | "female" | "other";
   balance?: number;
   status?: "active" | "inactive";
+  selectedRole?: string;
 }
 
 export interface CommonUserResponse {
@@ -66,11 +68,12 @@ export interface AddUserData {
   homeAddress: string;
   city: string;
   region: string;
-  categoryName: string;
+  categoryName?: string;
   // companyName: string;
   location: string | string[];
   gender: "male" | "female" | "other";
   balance: number;
+  selectedRole: string;
 }
 export interface CSVErrorDetail {
   identifier: string;

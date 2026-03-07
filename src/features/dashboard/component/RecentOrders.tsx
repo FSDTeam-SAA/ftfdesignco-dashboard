@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo } from "react";
 import { format } from "date-fns";
-import { useDeleteOrder, useRecentOrders } from "../hooks/useRecentOrders";
+import { useDeleteOrder, useRecentOrders, useUpdateOrderStatus } from "../hooks/useRecentOrders";
 import { useDebounce } from "@/hooks/useDebounce";
 import Pagination from "@/components/shared/Pagination";
 import { useQueryClient } from "@tanstack/react-query";
@@ -41,6 +41,30 @@ export default function RecentOrders() {
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const deleteOrderMutation = useDeleteOrder();
+  const updateStatusMutation = useUpdateOrderStatus();
+
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    try {
+      await updateStatusMutation.mutateAsync({ id: orderId, status: newStatus });
+      toast.success("Order status updated successfully");
+    } catch (error) {
+      console.error("Update status error:", error);
+      toast.error("Failed to update order status");
+    }
+  };
+
+  const getStatusStyle = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "inprogress":
+        return "bg-orange-50 text-orange-600 border-orange-100";
+      case "shipped/complete":
+        return "bg-green-50 text-[#22AD5C] border-emerald-100";
+      case "new":
+        return "bg-blue-50 text-blue-600 border-blue-100";
+      default:
+        return "bg-gray-50 text-gray-600 border-gray-100";
+    }
+  };
 
   // Sorting State
   const [sortField, setSortField] = useState<"name" | "email" | "date" | null>(
@@ -269,6 +293,9 @@ export default function RecentOrders() {
                 </div>
               </th>
               <th className="pb-6 px-4 text-center text-lg font-medium text-gray-400">
+                Order Status
+              </th>
+              <th className="pb-6 px-4 text-center text-lg font-medium text-gray-400">
                 Action
               </th>
             </tr>
@@ -301,6 +328,41 @@ export default function RecentOrders() {
                   </td>
                   <td className="py-4 px-4 text-center text-md font-medium text-gray-600">
                     {order.user?.email || "N/A"}
+                  </td>
+                  <td className="py-4 px-4 text-center text-md font-medium text-gray-600">
+                    <Select
+                      value={order.status || "new"}
+                      onValueChange={(value) =>
+                        handleStatusChange(order._id, value)
+                      }
+                      disabled={updateStatusMutation.isPending}
+                    >
+                      <SelectTrigger
+                        className={`w-40 h-9 mx-auto border rounded-xl focus:ring-opacity-50 transition-all font-semibold ${getStatusStyle(order.status || "new")}`}
+                      >
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 shadow-lg rounded-xl">
+                        <SelectItem
+                          value="new"
+                          className="focus:bg-blue-50 focus:text-blue-600"
+                        >
+                          New
+                        </SelectItem>
+                        <SelectItem
+                          value="inprogress"
+                          className="focus:bg-orange-50 focus:text-orange-600"
+                        >
+                          In Progress
+                        </SelectItem>
+                        <SelectItem
+                          value="shipped/complete"
+                          className="focus:bg-green-50 focus:text-[#22AD5C]"
+                        >
+                          Shipped / Complete
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </td>
                   <td className="py-4 px-4 text-center rounded-r-lg">
                     <div className="flex items-center justify-center gap-2">

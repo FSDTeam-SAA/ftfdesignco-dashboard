@@ -49,7 +49,7 @@ const editUserSchema = z.object({
   homeAddress: z.string().min(5, "Address must be at least 5 characters"),
   city: z.string().min(2, "City is required"),
   region: z.string().min(2, "Region is required"),
-  categoryName: z.string().min(1, "Job / Role is required"),
+  selectedRole: z.string().min(1, "Job / Role is required"),
   location: z.array(z.string()).min(1, "At least one regional office is required"),
   gender: z.enum(["male", "female", "other"], {
     required_error: "Gender is required",
@@ -89,7 +89,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
       homeAddress: "",
       city: "",
       region: "",
-      categoryName: "",
+      selectedRole: "",
       location: [],
       gender: "male",
       balance: 0,
@@ -121,7 +121,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
         homeAddress: user.homeAddress || "",
         city: user.city || "",
         region: user.region || "",
-        categoryName: user.categoryName || user.role_id?.roleTitle || "",
+        selectedRole: user.selectedRole || user.role_id?._id || "",
         location: user.location
           ? (typeof user.location === "string" && user.location.includes("|")
             ? user.location.split("|")
@@ -297,7 +297,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                 />
                 <FormField
                   control={form.control}
-                  name="categoryName"
+                  name="selectedRole"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 font-bold">
@@ -332,7 +332,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                             categories.map((category) => (
                               <SelectItem
                                 key={category._id}
-                                value={category.roleTitle}
+                                value={category._id}
                               >
                                 {category.roleTitle}
                               </SelectItem>

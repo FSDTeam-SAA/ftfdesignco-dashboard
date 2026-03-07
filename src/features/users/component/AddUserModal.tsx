@@ -42,7 +42,7 @@ const addUserSchema = z.object({
   homeAddress: z.string().min(5, "Address must be at least 5 characters"),
   city: z.string().min(2, "City is required"),
   region: z.string().min(2, "Region is required"),
-  categoryName: z.string().min(1, "Job / Role is required"),
+  selectedRole: z.string().min(1, "Job / Role is required"),
   location: z.array(z.string()).min(1, "At least one regional office is required"),
   gender: z.enum(["male", "female", "other"], {
     required_error: "Gender is required",
@@ -76,7 +76,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
       homeAddress: "",
       city: "",
       region: "",
-      categoryName: "",
+      selectedRole: "",
       location: [],
       gender: "male",
       balance: 0,
@@ -97,7 +97,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
 
   // Add User Submit Handler
   const onSubmit = (data: AddUserFormValues) => {
-    console.log("Adding New User with Category:", data);
+    console.log("Adding New User with Role:", data);
     const payload = {
       ...data,
       location: data.location.join('|'),
@@ -237,7 +237,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                 />
                 <FormField
                   control={form.control}
-                  name="categoryName"
+                  name="selectedRole"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 font-bold">
@@ -272,7 +272,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                             categories.map((category) => (
                               <SelectItem
                                 key={category._id}
-                                value={category.roleTitle}
+                                value={category._id}
                               >
                                 {category.roleTitle}
                               </SelectItem>
