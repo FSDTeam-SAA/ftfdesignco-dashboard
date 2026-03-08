@@ -10,7 +10,7 @@ export interface Order {
   _id: string;
   createdAt: string;
   updatedAt?: string;
-  status: string;
+  status: "new" | "inprogress" | "shipped/complete";
   totalAmount: number;
   remainingBalance: number;
   region: string;
