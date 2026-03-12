@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import { isAxiosError } from "axios";
-import { useDeleteUser, useUsers } from "../hooks/useUsers";
+import { useDeleteUser, useUsers, useResetPassword } from "../hooks/useUsers";
 import { User } from "../types";
 import Pagination from "@/components/shared/Pagination";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +59,10 @@ export default function Users() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isBalanceResetModalOpen, setIsBalanceResetModalOpen] = useState(false);
+
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const { mutateAsync: resetPassword, isPending: isResetting } = useResetPassword();
 
   const handleViewUser = (user: User) => {
     setSelectedUser(user);
@@ -164,11 +168,47 @@ export default function Users() {
       currentPage * itemsPerPage,
     );
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = users.map((u) => u._id);
+      setSelectedUserIds(allIds);
+    } else {
+      setSelectedUserIds([]);
+    }
+  };
+
+  const handleSelectUser = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedUserIds((prev) => [...prev, id]);
+    } else {
+      setSelectedUserIds((prev) => prev.filter((userId) => userId !== id));
+    }
+  };
+
+  const handleConfirmResetPassword = async () => {
+    try {
+      const response = await resetPassword({ userIds: selectedUserIds });
+      if (response.success) {
+        toast.success(response.message || "Passwords reset successfully");
+        setSelectedUserIds([]);
+        setIsResetConfirmOpen(false);
+      } else {
+        toast.error(response.message || "Failed to reset passwords");
+      }
+    } catch (error: unknown) {
+      let errorMessage = "Something went wrong while resetting passwords";
+      if (isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || errorMessage;
+      }
+      toast.error(errorMessage);
+    }
+  };
+
   const renderTableBody = () => {
     if (isLoading) {
       return Array.from({ length: 5 }).map((_, i) => (
         <tr key={`skeleton-${i}`} className="bg-white">
-          <td colSpan={5} className="px-6 py-4">
+          <td colSpan={6} className="px-6 py-4">
             <Skeleton className="h-16 w-full rounded-xl" />
           </td>
         </tr>
@@ -179,7 +219,7 @@ export default function Users() {
       return (
         <tr>
           <td
-            colSpan={5}
+            colSpan={6}
             className="text-center py-10 text-gray-400 font-medium"
           >
             No users found.
@@ -211,7 +251,15 @@ export default function Users() {
             boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.04)",
           }}
         >
-          <td className="px-6 py-4 rounded-l-2xl border-y border-l">
+          <td className="px-6 py-4 rounded-l-2xl border-y border-l w-12">
+            <input
+              type="checkbox"
+              className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
+              checked={selectedUserIds.includes(user._id)}
+              onChange={(e) => handleSelectUser(user._id, e.target.checked)}
+            />
+          </td>
+          <td className="px-6 py-4 border-y">
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10 border border-gray-100 shadow-sm">
                 <AvatarImage src={user.profileImage} />
@@ -323,6 +371,16 @@ export default function Users() {
           >
             Balance Reset
           </button>
+          <button
+            onClick={() => setIsResetConfirmOpen(true)}
+            disabled={selectedUserIds.length === 0}
+            className={`inline-flex items-center gap-2 px-6 py-3 font-bold rounded-xl transition-all whitespace-nowrap ${selectedUserIds.length > 0
+                ? "bg-rose-500 hover:bg-rose-600 text-white hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed hidden sm:inline-flex"
+              }`}
+          >
+            Reset Password {selectedUserIds.length > 0 && `(${selectedUserIds.length})`}
+          </button>
         </div>
       </div>
 
@@ -332,6 +390,14 @@ export default function Users() {
           <table className="w-full border-separate border-spacing-y-4 min-w-[900px]">
             <thead>
               <tr className="text-left text-gray-400 font-bold text-xs uppercase tracking-wider">
+                <th className="px-6 py-2 w-12">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
+                    checked={users.length > 0 && selectedUserIds.length === users.length}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                  />
+                </th>
                 <th
                   className="px-6 py-2 cursor-pointer hover:text-gray-600 transition-colors"
                   onClick={() => handleSort("firstName")}
@@ -438,6 +504,36 @@ export default function Users() {
               className="rounded-xl bg-rose-500 hover:bg-rose-600 font-semibold h-11 border-none shadow-lg shadow-rose-100"
             >
               Yes, Delete User
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Password Confirmation */}
+      <AlertDialog
+        open={isResetConfirmOpen}
+        onOpenChange={setIsResetConfirmOpen}
+      >
+        <AlertDialogContent className="rounded-3xl border-none p-8">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold">
+              Reset Passwords?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-500">
+              Are you sure you want to reset the passwords for the {selectedUserIds.length} selected user(s)?
+              Usually an email will be sent to them with their new passwords, or it will be reset to a default value.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 gap-3">
+            <AlertDialogCancel className="rounded-xl border-gray-200 font-semibold h-11">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmResetPassword}
+              disabled={isResetting}
+              className="rounded-xl bg-rose-500 hover:bg-rose-600 font-semibold h-11 border-none shadow-lg shadow-rose-100"
+            >
+              {isResetting ? "Resetting..." : "Yes, Reset Passwords"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
