@@ -1,6 +1,7 @@
 // src/features/dashboard/hooks/useCategory.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getCategories, addCategory, deleteCategory } from "../api/category";
+import { getCategories, addCategory, updateCategory, deleteCategory } from "../api/category";
+import { SingleCategoryResponse } from "../types";
 
 // Get all categories hook
 export const useCategories = () => {
@@ -21,6 +22,19 @@ export const useAddCategory = () => {
   });
 };
 
+
+// Update category hook
+export const useUpdateCategory = () => {
+  const queryClient = useQueryClient();
+  return useMutation<SingleCategoryResponse, Error, { id: string; formData: FormData }>({
+    mutationFn: ({ id, formData }: { id: string; formData: FormData }) =>
+      updateCategory(id, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
+};
+
 // Delete category hook
 export const useDeleteCategory = () => {
   const queryClient = useQueryClient();
@@ -31,3 +45,4 @@ export const useDeleteCategory = () => {
     },
   });
 };
+

@@ -32,6 +32,26 @@ export const addCategory = async (
   }
 };
 
+// Update category
+
+// patch method /role/select-role   in body "roleId": "6982365f734646f6e8419b5f"
+export const updateCategory = async (
+  id: string,
+  formData: FormData,
+): Promise<SingleCategoryResponse> => {
+  try {
+    const response = await axiosInstance.put(`/role/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating category:", error);
+    throw error;
+  }
+};
+
 // Delete category
 export const deleteCategory = async (
   id: string,

@@ -43,6 +43,7 @@ export default function RecentOrders() {
   const deleteOrderMutation = useDeleteOrder();
   const updateStatusMutation = useUpdateOrderStatus();
 
+
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
       await updateStatusMutation.mutateAsync({ id: orderId, status: newStatus });
@@ -78,6 +79,9 @@ export default function RecentOrders() {
     debouncedSearchTerm,
     region,
   );
+
+  console.log("data", data?.data[0]?.products[0]);
+
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -295,6 +299,9 @@ export default function RecentOrders() {
               <th className="pb-6 px-4 text-center text-lg font-medium text-gray-400">
                 Order Status
               </th>
+              {/* <th className="pb-6 px-4 text-center text-lg font-medium text-gray-400">
+                Products
+              </th> */}
               <th className="pb-6 px-4 text-center text-lg font-medium text-gray-400">
                 Action
               </th>

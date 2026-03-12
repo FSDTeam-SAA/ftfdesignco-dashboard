@@ -3,8 +3,9 @@ import { useState } from "react";
 import { useCategories, useDeleteCategory } from "../hooks/useCategory";
 import { Category as CategoryType } from "../types";
 import AddCategoryModal from "./AddCategoryModal";
+import EditCategoryModal from "./EditCategoryModal";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -22,12 +23,22 @@ import {
 
 export default function Category() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [categoryToEdit, setCategoryToEdit] = useState<CategoryType | null>(null);
   const { data, isLoading, error } = useCategories();
   const { mutateAsync: deleteCategory } = useDeleteCategory();
 
   const categories: CategoryType[] = data?.data || [];
+
+  const handleEditClick = (id: string) => {
+    const category = categories.find((c) => c._id === id);
+    if (category) {
+      setCategoryToEdit(category);
+      setIsEditModalOpen(true);
+    }
+  };
 
   const handleDeleteClick = (id: string) => {
     setCategoryToDelete(id);
@@ -108,6 +119,12 @@ export default function Category() {
         <td className="px-6 py-4 text-center rounded-r-2xl border-y border-r">
           <div className="flex items-center justify-center gap-3">
             <button
+              onClick={() => handleEditClick(category._id)}
+              className="text-blue-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-blue-50 rounded-lg cursor-pointer"
+            >
+              <Pencil size={20} />
+            </button>
+            <button
               onClick={() => handleDeleteClick(category._id)}
               className="text-red-400 hover:text-red-600 transition-colors p-1.5 hover:bg-red-50 rounded-lg cursor-pointer"
             >
@@ -173,6 +190,16 @@ export default function Category() {
       <AddCategoryModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+      />
+
+      <EditCategoryModal
+        key={categoryToEdit?._id}
+        isOpen={isEditModalOpen}
+        category={categoryToEdit}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setCategoryToEdit(null);
+        }}
       />
 
       {/* Delete Confirmation */}

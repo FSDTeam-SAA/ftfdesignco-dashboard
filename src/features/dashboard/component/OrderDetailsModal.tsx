@@ -13,6 +13,7 @@ import {
   MapPin,
   CreditCard,
   ClipboardList,
+  Package,
   LucideIcon,
 } from "lucide-react";
 
@@ -76,7 +77,7 @@ export default function OrderDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-white rounded-2xl overflow-hidden p-0 border-none shadow-2xl">
+      <DialogContent className="max-w-4xl bg-white rounded-2xl overflow-hidden p-0 border-none shadow-2xl">
         <DialogHeader className="bg-[#22AD5C] p-6 text-white text-left">
           <DialogTitle className="text-2xl font-bold flex items-center justify-between">
             <span>Order Details</span>
@@ -137,10 +138,75 @@ export default function OrderDetailsModal({
               />
             </InfoSection>
 
+
             {/* Other details if any */}
             <InfoSection title="Additional Details" icon={MapPin}>
               <InfoItem label="Currency" value="USD" />
             </InfoSection>
+          </div>  
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
+            {/* Product Details */}
+            <InfoSection title="Product Details" icon={Package}>
+              <div className="space-y-4">
+                {order.products?.map((item) => (
+                  <div
+                    key={item._id}
+                    className="flex flex-col sm:flex-row gap-4 p-4 border rounded-xl bg-gray-50/50 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-white border shrink-0">
+                      <img
+                        src={item.productId.images[0]?.url}
+                        alt={item.productId.title}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="flex-1 grid grid-cols-2 gap-y-3 gap-x-4">
+                      <div className="col-span-2">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">
+                          Product Name
+                        </span>
+                        <span className="text-sm font-bold text-gray-800 line-clamp-1">
+                          {item.productId.title}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">
+                          Quantity
+                        </span>
+                        <span className="text-sm font-bold text-gray-700">
+                          {item.quantity}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">
+                          Size
+                        </span>
+                        <Badge variant="outline" className="text-[10px] font-bold h-5">
+                          {item.size}
+                        </Badge>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">
+                          Price
+                        </span>
+                        <span className="text-sm font-bold text-[#22AD5C]">
+                          ${item.productId.price}
+                        </span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">
+                          Region
+                        </span>
+                        <span className="text-sm font-semibold text-gray-600">
+                          {item.productId.rigion?.[0] || "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </InfoSection>
+
           </div>
         </div>
       </DialogContent>
