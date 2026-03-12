@@ -6,6 +6,7 @@ import {
   editUser,
   getUsers,
   updateUserBalance,
+  resetPassword,
 } from "../api/users";
 import { AddUserData, UpdateUserData } from "../types";
 
@@ -16,7 +17,7 @@ export const useUsers = (
 ) => {
   return useQuery({
     queryKey: ["users", page, limit],
-    queryFn: () => getUsers(page, limit ),
+    queryFn: () => getUsers(page, limit),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
   });
@@ -73,6 +74,17 @@ export const useUpdateUserBalance = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: { balance: number }) => updateUserBalance(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+};
+
+// reset password
+export const useResetPassword = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { userIds: string[] }) => resetPassword(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },

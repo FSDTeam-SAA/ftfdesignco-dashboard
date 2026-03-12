@@ -6,6 +6,7 @@ import {
   UpdateUserData,
   UserResponse,
 } from "../types";
+import { getSession } from "next-auth/react";
 
 // Get All Users
 export const getUsers = async (
@@ -77,5 +78,20 @@ export const updateUserBalance = async (
   data: { balance: number },
 ): Promise<CommonUserResponse> => {
   const response = await axiosInstance.put(`/user/update-balance`, data);
+  return response.data;
+};
+
+// POST method reset password http://localhost:5000/api/v1/auth/admin/reset-password
+
+export const resetPassword = async (
+  data: { userIds: string[] },
+): Promise<CommonUserResponse> => {
+  const session = await getSession();
+  const token = session?.accessToken || "";
+  const response = await axiosInstance.post(`/auth/admin/reset-password`, data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
