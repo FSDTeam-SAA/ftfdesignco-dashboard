@@ -185,6 +185,10 @@ export default function Users() {
     }
   };
 
+  const handleClearSelection = () => {
+    setSelectedUserIds([]);
+  };
+
   const handleConfirmResetPassword = async () => {
     try {
       const response = await resetPassword({ userIds: selectedUserIds });
@@ -371,12 +375,20 @@ export default function Users() {
           >
             Balance Reset
           </button>
+          {selectedUserIds.length > 0 && (
+            <button
+              onClick={handleClearSelection}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all hover:bg-gray-50 hover:shadow-md hover:-translate-y-0.5 cursor-pointer whitespace-nowrap animate-in fade-in slide-in-from-right-4 duration-300"
+            >
+              Clear Selection
+            </button>
+          )}
           <button
             onClick={() => setIsResetConfirmOpen(true)}
             disabled={selectedUserIds.length === 0}
             className={`inline-flex items-center gap-2 px-6 py-3 font-bold rounded-xl transition-all whitespace-nowrap ${selectedUserIds.length > 0
-                ? "bg-rose-500 hover:bg-rose-600 text-white hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed hidden sm:inline-flex"
+              ? "bg-rose-500 hover:bg-rose-600 text-white hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+              : "bg-gray-100 text-gray-400 cursor-not-allowed hidden sm:inline-flex"
               }`}
           >
             Reset Password {selectedUserIds.length > 0 && `(${selectedUserIds.length})`}
@@ -531,7 +543,7 @@ export default function Users() {
             <AlertDialogAction
               onClick={handleConfirmResetPassword}
               disabled={isResetting}
-              className="rounded-xl bg-rose-500 hover:bg-rose-600 font-semibold h-11 border-none shadow-lg shadow-rose-100"
+              className="rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold h-11 border-none shadow-lg shadow-rose-100"
             >
               {isResetting ? "Resetting..." : "Yes, Reset Passwords"}
             </AlertDialogAction>
