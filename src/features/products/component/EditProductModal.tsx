@@ -204,7 +204,7 @@ export default function EditProductModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl bg-white rounded-2xl p-0 border-none shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <DialogContent className="!max-w-4xl bg-white rounded-2xl p-0 border-none shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <DialogHeader className="bg-[#22AD5C] p-6 text-white shrink-0">
           <DialogTitle className="text-2xl font-bold">Edit Product</DialogTitle>
           <p className="text-green-50 opacity-90 mt-1">
