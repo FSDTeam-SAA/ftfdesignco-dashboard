@@ -29,6 +29,7 @@ import { useCategories } from "../../category/hooks/useCategory";
 import { toast } from "sonner";
 import Image from "next/image";
 import { getProductMainImage } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 
 // REGIONAL OFFICE Name
 const regionalOffice = [
@@ -44,15 +45,16 @@ const regionalOffice = [
 
 const productSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
-  // sku: z.string().optional(),
   description: z.string().min(10, "Description must be at least 10 characters"),
   type: z.string().min(1, "Product type is required"),
   size: z.string().min(1, "Size is required"),
-  price: z.coerce.number().min(0, "Price must be a positive number"),
+  price: z.coerce.number().min(0.01, "Price must be greater than 0"),
   availableQuantity: z.coerce.number().min(0, "Stock must be at least 0"),
   status: z.enum(["active", "inactive"]),
   role: z.string().optional(),
-  targetRoles: z.array(z.string()).min(1, "At least one target role is required"),
+  targetRoles: z
+    .array(z.string())
+    .min(1, "At least one target role is required"),
   region: z.string().optional(),
 });
 
@@ -71,6 +73,7 @@ export default function EditProductModal({
 }: Readonly<EditProductModalProps>) {
   const [previews, setPreviews] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const queryClient = useQueryClient();
   const { data: categoryData, isLoading: isCategoriesLoading } =
     useCategories();
   const { mutate: editProduct, isPending } = useEditProduct();
@@ -84,15 +87,37 @@ export default function EditProductModal({
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
+    defaultValues: {
+      status: "active",
+      price: 0,
+      availableQuantity: 0,
+    },
   });
 
   const currentStatus = watch("status");
 
   useEffect(() => {
     if (product && isOpen) {
+      // Extract targetRoles IDs properly
+      let targetRoleIds: string[] = [];
+      if (product.targetRoles && Array.isArray(product.targetRoles)) {
+        targetRoleIds = product.targetRoles
+          .map((role) => {
+            if (typeof role === "string") return role;
+            if (role && typeof role === "object")
+              return (
+                (role as { _id?: string; id?: string })._id ||
+                (role as { _id?: string; id?: string }).id
+              );
+            return "";
+          })
+          .filter((id): id is string => Boolean(id));
+      } else if (product.role) {
+        targetRoleIds = [product.role];
+      }
+
       reset({
         title: product.title,
-        // sku: product.sku || "",
         description: product.description,
         type: product.type,
         size: product.size,
@@ -100,7 +125,7 @@ export default function EditProductModal({
         availableQuantity: product.availableQuantity,
         status: product.status,
         role: product.role || "",
-        targetRoles: product.targetRoles || (product.role ? [product.role] : []),
+        targetRoles: targetRoleIds,
         region: product.region || "",
       });
 
@@ -143,8 +168,6 @@ export default function EditProductModal({
     });
     setImageFiles((prev) => {
       const updated = [...prev];
-      // Note: This logic assumes a 1:1 mapping between previews and imageFiles for new uploads
-      // In a more complex scenario with existing images, we'd need a more robust tracking
       updated.splice(index, 1);
       return updated;
     });
@@ -154,6 +177,8 @@ export default function EditProductModal({
     if (!product) return;
 
     const formData = new FormData();
+
+    // Append standard fields
     formData.append("title", values.title);
     formData.append("type", values.type);
     formData.append("description", values.description);
@@ -168,14 +193,15 @@ export default function EditProductModal({
       formData.append("targetRoles[]", roleId);
     });
 
+    // Append region
     if (values.region) {
-      formData.append("rigion", values.region);
+      formData.append("region", values.region);
     }
 
     // Append new images
     if (imageFiles.length > 0) {
       imageFiles.forEach((file) => {
-        formData.append("images", file); // Fixed typo from 'image' to 'images' to match backend/AddProduct
+        formData.append("images", file);
       });
     }
 
@@ -184,6 +210,7 @@ export default function EditProductModal({
       {
         onSuccess: () => {
           toast.success("Product updated successfully");
+          queryClient.invalidateQueries({ queryKey: ["products"] });
           onClose();
         },
         onError: (error: unknown) => {
@@ -226,8 +253,9 @@ export default function EditProductModal({
                 id="title"
                 {...register("title")}
                 placeholder="Enter product title"
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.title ? "border-red-500" : ""
-                  }`}
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                  errors.title ? "border-red-500" : ""
+                }`}
               />
               {errors.title && (
                 <p className="text-red-500 text-xs mt-1">
@@ -236,55 +264,103 @@ export default function EditProductModal({
               )}
             </div>
 
-            {/* <div className="space-y-2">
-              <Label htmlFor="sku" className="text-gray-700 font-semibold">
-                SKU
+            <div className="space-y-2">
+              <Label htmlFor="type" className="text-gray-700 font-semibold">
+                Product Type *
               </Label>
               <Input
-                id="sku"
-                {...register("sku")}
-                placeholder="Enter SKU"
-                className="rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C]"
+                id="type"
+                {...register("type")}
+                placeholder="Enter product type"
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                  errors.type ? "border-red-500" : ""
+                }`}
               />
-            </div> */}
+              {errors.type && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.type.message}
+                </p>
+              )}
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="role" className="text-gray-700 font-semibold">
                 Job / Role *
               </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 border border-gray-200 rounded-lg">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 border border-gray-100 rounded-2xl bg-gray-50/50">
                 {isCategoriesLoading ? (
-                  <p className="text-gray-400 text-sm italic">Loading roles...</p>
+                  <div className="col-span-full flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />
+                  </div>
                 ) : (
                   categoryData?.data.map((category) => {
                     const selectedRoles = watch("targetRoles") || [];
                     const isChecked = selectedRoles.includes(category._id);
 
                     return (
-                      <div key={category._id} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={`edit-role-${category._id}`}
-                          checked={isChecked}
-                          onChange={(e) => {
-                            const current = watch("targetRoles") || [];
-                            if (e.target.checked) {
-                              setValue("targetRoles", [...current, category._id]);
-                            } else {
-                              setValue(
-                                "targetRoles",
-                                current.filter((id) => id !== category._id)
-                              );
-                            }
-                          }}
-                          className="w-4 h-4 text-[#22AD5C] border-gray-300 rounded focus:ring-[#22AD5C]"
-                        />
-                        <Label
-                          htmlFor={`edit-role-${category._id}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      <div
+                        key={category._id}
+                        onClick={() => {
+                          const current = watch("targetRoles") || [];
+                          if (!isChecked) {
+                            setValue("targetRoles", [...current, category._id]);
+                          } else {
+                            setValue(
+                              "targetRoles",
+                              current.filter((id) => id !== category._id),
+                            );
+                          }
+
+                          // Keep 'type' updated for edit product compatibility
+                          if (!isChecked && current.length === 0) {
+                            setValue("type", category.roleTitle);
+                          }
+                        }}
+                        className={`group relative flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer select-none h-24 text-center ${
+                          isChecked
+                            ? "bg-emerald-50 border-emerald-500 shadow-sm"
+                            : "bg-white border-transparent hover:border-gray-200 hover:shadow-sm"
+                        }`}
+                      >
+                        <div
+                          className={`w-5 h-5 rounded-full border flex items-center justify-center absolute top-2 right-2 transition-all ${
+                            isChecked
+                              ? "bg-emerald-500 border-emerald-500 text-white"
+                              : "border-gray-300 bg-white"
+                          }`}
+                        >
+                          {isChecked && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                        </div>
+                        <div
+                          className={`p-2 rounded-lg mb-1 transition-colors ${
+                            isChecked
+                              ? "bg-emerald-100 text-emerald-600"
+                              : "bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-500"
+                          }`}
+                        >
+                          <ImageIcon size={18} />
+                        </div>
+                        <span
+                          className={`text-xs font-bold leading-tight line-clamp-2 ${
+                            isChecked ? "text-emerald-700" : "text-gray-600"
+                          }`}
                         >
                           {category.roleTitle}
-                        </Label>
+                        </span>
                       </div>
                     );
                   })
@@ -305,8 +381,9 @@ export default function EditProductModal({
                 id="size"
                 {...register("size")}
                 placeholder="e.g. M, L, XL or 42, 44"
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.size ? "border-red-500" : ""
-                  }`}
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                  errors.size ? "border-red-500" : ""
+                }`}
               />
               {errors.size && (
                 <p className="text-red-500 text-xs mt-1">
@@ -324,8 +401,9 @@ export default function EditProductModal({
                 type="number"
                 step="0.01"
                 {...register("price")}
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.price ? "border-red-500" : ""
-                  }`}
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                  errors.price ? "border-red-500" : ""
+                }`}
               />
               {errors.price && (
                 <p className="text-red-500 text-xs mt-1">
@@ -345,8 +423,9 @@ export default function EditProductModal({
                 id="availableQuantity"
                 type="number"
                 {...register("availableQuantity")}
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.availableQuantity ? "border-red-500" : ""
-                  }`}
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                  errors.availableQuantity ? "border-red-500" : ""
+                }`}
               />
               {errors.availableQuantity && (
                 <p className="text-red-500 text-xs mt-1">
@@ -413,8 +492,9 @@ export default function EditProductModal({
               {...register("description")}
               rows={4}
               placeholder="Enter product description..."
-              className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.description ? "border-red-500" : ""
-                }`}
+              className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                errors.description ? "border-red-500" : ""
+              }`}
             />
             {errors.description && (
               <p className="text-red-500 text-xs mt-1">
