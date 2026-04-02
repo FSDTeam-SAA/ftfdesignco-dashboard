@@ -108,6 +108,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
     "5061 Howerton Way. Suite L Bowie, MD 20715",
     "10189 Maple Leaf Ct. Ashland, VA 23005",
     "2551 Eltham Ave. Suite L Norfolk, VA 23513",
+    "24181 State Hwy 49 Unit C, Richfield, NC 28137",
   ];
 
   useEffect(() => {
