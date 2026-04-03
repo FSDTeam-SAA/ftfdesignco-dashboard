@@ -19,15 +19,18 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  if (pathname === "/login") {
+    if (token) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    return NextResponse.next();
+  }
+
   //  Protect dashboard routes
   if (pathname.startsWith("/dashboard")) {
     // Not logged in
     if (!token) {
-      return NextResponse.redirect(new URL("/login", req.url));
-    }
-
-    // Role check
-    if (token.role !== "owner") {
       return NextResponse.redirect(new URL("/login", req.url));
     }
   }
@@ -36,5 +39,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/dashboard/:path*"],
+  matcher: ["/", "/login", "/dashboard/:path*"],
 };

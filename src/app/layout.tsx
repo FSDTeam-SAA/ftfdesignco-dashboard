@@ -13,8 +13,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "FTF Design Co. Dashboard",
-  description:
-    "Dashboard for FTF Design Co.",
+  description: "Dashboard for FTF Design Co.",
 };
 
 export default function RootLayout({
@@ -23,8 +22,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${poppins.variable} antialiased`}>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${poppins.variable} antialiased`}
+        suppressHydrationWarning
+      >
         <MainProviders>
           <Provider> {children} </Provider>
         </MainProviders>

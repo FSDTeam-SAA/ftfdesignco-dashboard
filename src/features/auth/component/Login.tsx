@@ -1,20 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 const Login = () => {
-  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
+  const { status } = useSession();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard");
+    }
+  }, [router, status]);
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -28,13 +35,13 @@ const Login = () => {
 
       if (result?.ok) {
         toast.success("Logged in successfully!");
-        router.push("/dashboard");
+        globalThis.location.replace("/dashboard");
       } else {
         const errorMsg = result?.error || "Login failed. Please try again.";
         toast.error(errorMsg);
         setError(errorMsg);
       }
-    } catch (err) {
+    } catch {
       toast.error("Something went wrong. Please try again.");
       setError("Something went wrong. Please try again.");
     } finally {
@@ -51,6 +58,9 @@ const Login = () => {
             alt="Company Logo"
             width={120}
             height={120}
+            loading="eager"
+            priority
+            style={{ width: "120px", height: "auto" }}
           />
         </div>
 
@@ -70,10 +80,14 @@ const Login = () => {
             </div>
           )}
           <div>
-            <label className="block text-sm text-gray-700 mb-1">
+            <label
+              htmlFor="login-email"
+              className="block text-sm text-gray-700 mb-1"
+            >
               Email Address
             </label>
             <input
+              id="login-email"
               type="email"
               placeholder="hello@example.com"
               className="w-full px-4 py-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:bg-[#feecee]/5 focus:ring-[#feecee]"
@@ -84,8 +98,14 @@ const Login = () => {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Password</label>
+            <label
+              htmlFor="login-password"
+              className="block text-sm text-gray-700 mb-1"
+            >
+              Password
+            </label>
             <input
+              id="login-password"
               type="password"
               placeholder="********"
               className="w-full px-4 py-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
@@ -97,12 +117,16 @@ const Login = () => {
 
           {/* Options */}
           <div className="flex items-center justify-between text-base mt-2 px-1">
-            <label className="flex items-center gap-2 text-gray-600 cursor-pointer select-none">
+            <label
+              htmlFor="remember-me"
+              className="flex items-center gap-2 text-gray-600 cursor-pointer select-none"
+            >
               <input
+                id="remember-me"
                 type="checkbox"
                 className="w-4 h-4 rounded border-gray-300 text-[#000000] focus:ring-primary accent-[#000000] transition-all cursor-pointer"
               />
-              Remember me
+              <span>Remember me</span>
             </label>
 
             <Link

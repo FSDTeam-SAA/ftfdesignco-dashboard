@@ -67,6 +67,11 @@ export default function ProductDetailsModal({
 }: Readonly<ProductDetailsModalProps>) {
   if (!product) return null;
 
+  const productWithExtraDetails = product as Product & {
+    fit_cut?: string;
+    fabric_material?: string;
+  };
+
   const imageUrl = getProductMainImage(product.images || product.image);
 
   return (
@@ -102,6 +107,14 @@ export default function ProductDetailsModal({
               />
               <InfoItem label="Job / Role" value={product.type} />
               <InfoItem label="Size / Variant" value={product.size} />
+              <InfoItem
+                label="Fit / Cut"
+                value={productWithExtraDetails.fit_cut}
+              />
+              <InfoItem
+                label="Fabric / Material"
+                value={productWithExtraDetails.fabric_material}
+              />
               <InfoItem label="Regional Office" value={product.rigion} />
             </InfoSection>
 

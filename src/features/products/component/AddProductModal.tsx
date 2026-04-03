@@ -28,10 +28,16 @@ const productSchema = z.object({
   size: z.string().min(1, "Size is required"),
   price: z.coerce.number().min(0.01, "Price must be greater than 0"),
   availableQuantity: z.coerce.number().min(0, "Stock must be at least 0"),
+  fit_cut: z.string().min(1, "Fit/Cut is required"),
+  fabric_material: z.string().min(1, "Fabric/Material is required"),
   // status: z.enum(["active", "inactive"]),
   role: z.string().optional(),
-  targetRoles: z.array(z.string()).min(1, "At least one target role is required"),
-  regionalOffices: z.array(z.string()).min(1, "At least one regional office is required"),
+  targetRoles: z
+    .array(z.string())
+    .min(1, "At least one target role is required"),
+  regionalOffices: z
+    .array(z.string())
+    .min(1, "At least one regional office is required"),
 });
 
 // REGIONAL OFFICE Name
@@ -113,6 +119,8 @@ export default function AddProductModal({
     formData.append("type", values.type);
     formData.append("description", values.description);
     formData.append("size", values.size);
+    formData.append("fit_cut", values.fit_cut);
+    formData.append("fabric_material", values.fabric_material);
     formData.append("availableQuantity", values.availableQuantity.toString());
     formData.append("price", values.price.toString());
     formData.append("status", "active");
@@ -127,7 +135,6 @@ export default function AddProductModal({
     values.regionalOffices.forEach((office) => {
       formData.append("rigion", office);
     });
-
 
     // Append image(s) - The Postman shows 'image' as a File
     if (imageFiles.length > 0) {
@@ -178,6 +185,26 @@ export default function AddProductModal({
           {/* Main Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
+              <Label htmlFor="fit_cut">Fit/Cut</Label>
+              <Input
+                id="fit_cut"
+                {...register("fit_cut")}
+                placeholder="Enter Fit/Cut"
+              />
+              {errors.fit_cut && <span>{errors.fit_cut.message}</span>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fabric_material">Fabric/Material</Label>
+              <Input
+                id="fabric_material"
+                {...register("fabric_material")}
+                placeholder="Enter Fabric/Material"
+              />
+              {errors.fabric_material && (
+                <span>{errors.fabric_material.message}</span>
+              )}
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="title" className="text-gray-700 font-semibold">
                 Product Name *
               </Label>
@@ -185,8 +212,9 @@ export default function AddProductModal({
                 id="title"
                 {...register("title")}
                 placeholder="Enter product title"
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.title ? "border-red-500" : ""
-                  }`}
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                  errors.title ? "border-red-500" : ""
+                }`}
               />
               {errors.title && (
                 <p className="text-red-500 text-xs mt-1">
@@ -194,7 +222,6 @@ export default function AddProductModal({
                 </p>
               )}
             </div>
-
 
             <div className="space-y-2">
               <Label htmlFor="role" className="text-gray-700 font-semibold">
@@ -220,7 +247,7 @@ export default function AddProductModal({
                           } else {
                             setValue(
                               "targetRoles",
-                              current.filter((id) => id !== category._id)
+                              current.filter((id) => id !== category._id),
                             );
                           }
 
@@ -229,16 +256,18 @@ export default function AddProductModal({
                             setValue("type", category.roleTitle);
                           }
                         }}
-                        className={`group relative flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer select-none h-24 text-center ${isChecked
-                          ? "bg-emerald-50 border-emerald-500 shadow-sm"
-                          : "bg-white border-transparent hover:border-gray-200 hover:shadow-sm"
-                          }`}
+                        className={`group relative flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer select-none h-24 text-center ${
+                          isChecked
+                            ? "bg-emerald-50 border-emerald-500 shadow-sm"
+                            : "bg-white border-transparent hover:border-gray-200 hover:shadow-sm"
+                        }`}
                       >
                         <div
-                          className={`w-5 h-5 rounded-full border flex items-center justify-center absolute top-2 right-2 transition-all ${isChecked
-                            ? "bg-emerald-500 border-emerald-500 text-white"
-                            : "border-gray-300 bg-white"
-                            }`}
+                          className={`w-5 h-5 rounded-full border flex items-center justify-center absolute top-2 right-2 transition-all ${
+                            isChecked
+                              ? "bg-emerald-500 border-emerald-500 text-white"
+                              : "border-gray-300 bg-white"
+                          }`}
                         >
                           {isChecked && (
                             <svg
@@ -256,10 +285,14 @@ export default function AddProductModal({
                             </svg>
                           )}
                         </div>
-                        <div className={`p-2 rounded-lg mb-1 transition-colors ${isChecked ? "bg-emerald-100 text-emerald-600" : "bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-500"}`}>
+                        <div
+                          className={`p-2 rounded-lg mb-1 transition-colors ${isChecked ? "bg-emerald-100 text-emerald-600" : "bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-500"}`}
+                        >
                           <ImageIcon size={18} />
                         </div>
-                        <span className={`text-xs font-bold leading-tight line-clamp-2 ${isChecked ? "text-emerald-700" : "text-gray-600"}`}>
+                        <span
+                          className={`text-xs font-bold leading-tight line-clamp-2 ${isChecked ? "text-emerald-700" : "text-gray-600"}`}
+                        >
                           {category.roleTitle}
                         </span>
                       </div>
@@ -282,8 +315,9 @@ export default function AddProductModal({
                 id="size"
                 {...register("size")}
                 placeholder="e.g. M, L, XL or 42, 44"
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.size ? "border-red-500" : ""
-                  }`}
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                  errors.size ? "border-red-500" : ""
+                }`}
               />
               {errors.size && (
                 <p className="text-red-500 text-xs mt-1">
@@ -301,8 +335,9 @@ export default function AddProductModal({
                 type="number"
                 step="0.01"
                 {...register("price")}
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.price ? "border-red-500" : ""
-                  }`}
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                  errors.price ? "border-red-500" : ""
+                }`}
               />
               {errors.price && (
                 <p className="text-red-500 text-xs mt-1">
@@ -322,8 +357,9 @@ export default function AddProductModal({
                 id="availableQuantity"
                 type="number"
                 {...register("availableQuantity")}
-                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.availableQuantity ? "border-red-500" : ""
-                  }`}
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                  errors.availableQuantity ? "border-red-500" : ""
+                }`}
               />
               {errors.availableQuantity && (
                 <p className="text-red-500 text-xs mt-1">
@@ -353,7 +389,10 @@ export default function AddProductModal({
             </div> */}
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="regionalOffices" className="text-gray-700 font-semibold">
+              <Label
+                htmlFor="regionalOffices"
+                className="text-gray-700 font-semibold"
+              >
                 Regional Office *
               </Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 border border-gray-100 rounded-2xl bg-gray-50/50">
@@ -371,20 +410,22 @@ export default function AddProductModal({
                         } else {
                           setValue(
                             "regionalOffices",
-                            current.filter((o) => o !== office)
+                            current.filter((o) => o !== office),
                           );
                         }
                       }}
-                      className={`group relative flex items-center p-3 rounded-xl border-2 transition-all cursor-pointer select-none h-auto gap-3 ${isChecked
-                        ? "bg-emerald-50 border-emerald-500 shadow-sm"
-                        : "bg-white border-transparent hover:border-gray-200 hover:shadow-sm"
-                        }`}
+                      className={`group relative flex items-center p-3 rounded-xl border-2 transition-all cursor-pointer select-none h-auto gap-3 ${
+                        isChecked
+                          ? "bg-emerald-50 border-emerald-500 shadow-sm"
+                          : "bg-white border-transparent hover:border-gray-200 hover:shadow-sm"
+                      }`}
                     >
                       <div
-                        className={`w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0 ${isChecked
-                          ? "bg-emerald-500 border-emerald-500 text-white"
-                          : "border-gray-300 bg-white"
-                          }`}
+                        className={`w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0 ${
+                          isChecked
+                            ? "bg-emerald-500 border-emerald-500 text-white"
+                            : "border-gray-300 bg-white"
+                        }`}
                       >
                         {isChecked && (
                           <svg
@@ -402,7 +443,9 @@ export default function AddProductModal({
                           </svg>
                         )}
                       </div>
-                      <span className={`text-xs font-semibold leading-tight ${isChecked ? "text-emerald-700" : "text-gray-600"}`}>
+                      <span
+                        className={`text-xs font-semibold leading-tight ${isChecked ? "text-emerald-700" : "text-gray-600"}`}
+                      >
                         {office}
                       </span>
                     </div>
@@ -429,8 +472,9 @@ export default function AddProductModal({
               {...register("description")}
               rows={4}
               placeholder="Enter product description..."
-              className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${errors.description ? "border-red-500" : ""
-                }`}
+              className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                errors.description ? "border-red-500" : ""
+              }`}
             />
             {errors.description && (
               <p className="text-red-500 text-xs mt-1">
