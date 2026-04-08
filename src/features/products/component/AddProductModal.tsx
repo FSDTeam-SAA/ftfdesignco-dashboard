@@ -185,26 +185,6 @@ export default function AddProductModal({
           {/* Main Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="fit_cut">Fit/Cut</Label>
-              <Input
-                id="fit_cut"
-                {...register("fit_cut")}
-                placeholder="Enter Fit/Cut"
-              />
-              {errors.fit_cut && <span>{errors.fit_cut.message}</span>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="fabric_material">Fabric/Material</Label>
-              <Input
-                id="fabric_material"
-                {...register("fabric_material")}
-                placeholder="Enter Fabric/Material"
-              />
-              {errors.fabric_material && (
-                <span>{errors.fabric_material.message}</span>
-              )}
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="title" className="text-gray-700 font-semibold">
                 Product Name *
               </Label>
@@ -364,6 +344,45 @@ export default function AddProductModal({
               {errors.availableQuantity && (
                 <p className="text-red-500 text-xs mt-1">
                   {errors.availableQuantity.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fit_cut" className="text-gray-700 font-semibold">
+                Fit/Cut *
+              </Label>
+              <Input
+                id="fit_cut"
+                {...register("fit_cut")}
+                placeholder="e.g. Regular Fit, Slim Fit"
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                  errors.fit_cut ? "border-red-500" : ""
+                }`}
+              />
+              {errors.fit_cut && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.fit_cut.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label
+                htmlFor="fabric_material"
+                className="text-gray-700 font-semibold"
+              >
+                Fabric/Material *
+              </Label>
+              <Input
+                id="fabric_material"
+                {...register("fabric_material")}
+                placeholder="e.g. Cotton, Polyester"
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                  errors.fabric_material ? "border-red-500" : ""
+                }`}
+              />
+              {errors.fabric_material && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.fabric_material.message}
                 </p>
               )}
             </div>
