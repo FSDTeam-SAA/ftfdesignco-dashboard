@@ -10,6 +10,8 @@ export interface Product {
   description: string;
   type: string;
   size: string;
+  fit_cut?: string;
+  fabric_material?: string;
   price: number;
   availableQuantity: number;
   status: "active" | "inactive";
