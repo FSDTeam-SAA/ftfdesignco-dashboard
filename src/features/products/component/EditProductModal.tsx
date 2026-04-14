@@ -49,6 +49,8 @@ const productSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters"),
   type: z.string().min(1, "Product type is required"),
   size: z.string().min(1, "Size is required"),
+  fit_cut: z.string().min(1, "Fit/Cut is required"),
+  fabric_material: z.string().min(1, "Fabric/Material is required"),
   price: z.coerce.number().min(0.01, "Price must be greater than 0"),
   availableQuantity: z.coerce.number().min(0, "Stock must be at least 0"),
   status: z.enum(["active", "inactive"]),
@@ -122,6 +124,8 @@ export default function EditProductModal({
         description: product.description,
         type: product.type,
         size: product.size,
+        fit_cut: product.fit_cut || "",
+        fabric_material: product.fabric_material || "",
         price: product.price,
         availableQuantity: product.availableQuantity,
         status: product.status,
@@ -184,6 +188,8 @@ export default function EditProductModal({
     formData.append("type", values.type);
     formData.append("description", values.description);
     formData.append("size", values.size);
+    formData.append("fit_cut", values.fit_cut);
+    formData.append("fabric_material", values.fabric_material);
     formData.append("availableQuantity", values.availableQuantity.toString());
     formData.append("price", values.price.toString());
     formData.append("status", values.status);
@@ -389,6 +395,47 @@ export default function EditProductModal({
               {errors.size && (
                 <p className="text-red-500 text-xs mt-1">
                   {errors.size.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fit_cut" className="text-gray-700 font-semibold">
+                Fit/Cut *
+              </Label>
+              <Input
+                id="fit_cut"
+                {...register("fit_cut")}
+                placeholder="e.g. Regular Fit, Slim Fit"
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                  errors.fit_cut ? "border-red-500" : ""
+                }`}
+              />
+              {errors.fit_cut && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.fit_cut.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="fabric_material"
+                className="text-gray-700 font-semibold"
+              >
+                Fabric/Material *
+              </Label>
+              <Input
+                id="fabric_material"
+                {...register("fabric_material")}
+                placeholder="e.g. Cotton, Polyester"
+                className={`rounded-lg border-gray-200 focus:border-[#22AD5C] focus:ring-[#22AD5C] ${
+                  errors.fabric_material ? "border-red-500" : ""
+                }`}
+              />
+              {errors.fabric_material && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.fabric_material.message}
                 </p>
               )}
             </div>
